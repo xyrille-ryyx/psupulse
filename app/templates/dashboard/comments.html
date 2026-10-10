@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sentiment_badge, unit_filter, card_title, seg_links, filter_chips with context %}
+{% block page_title %}Comments{% endblock %}
+{% block page_subtitle %}Anonymous, privacy-filtered comments with their sentiment and topic{% endblock %}
+{% block content %}
+
+{% if not windows %}
+  <div class="card empty"><p>No processed weeks yet.</p></div>
+{% else %}
+<form class="filters" method="get">
+  <input type="hidden" name="sentiment" value="{{ sentiment }}">
+  <div class="field">
+    <label for="window">Week</label>
+    <select id="window" name="window" onchange="this.form.submit()">
+      <option value="all" {{ 'selected' if window_param == 'all' }}>All time ({{ windows|length }} week{{ 's' if windows|length != 1 }})</option>
+      {% for w in windows %}<option value="{{ w.id }}" {{ 'selected' if window and w.id == window.id }}>{{ w.label }} ({{ w|window_dates }})</option>{% endfor %}
+    </select>
+  </div>
+  {{ unit_filter(unit_choices, unit_id, can_overall) }}
+  <div class="field">
+    <label for="topic">Topic</label>
+    <select id="topic" name="topic" onchange="this.form.submit()">
+      <option value="">All topics</option>
+      {% for key, label in topic_labels.items() %}<option value="{{ key }}" {{ 'selected' if key == topic }}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+{% set chips = [] %}
+{% if window_param != default_window %}{% set _ = chips.append(('window', 'Week', window.label if window else 'All time')) %}{% endif %}
+{% if unit_id != default_unit_id %}{% set _ = chips.append(('unit', 'Unit', unit.code if unit else 'University-wide')) %}{% endif %}
+{% if topic %}{% set _ = chips.append(('topic', 'Topic', topic|topic_label)) %}{% endif %}
+{% if sentiment %}{% set _ = chips.append(('sentiment', 'Sentiment', sentiment|capitalize)) %}{% endif %}
+{{ filter_chips('dashboard.comments', chips) }}
+  <noscript><button class="btn btn-ghost" type="submit">Apply</button></noscript>
+</form>
+<div class="card">
+  <div class="card-head">
+    {{ card_title('comments', (items.total ~ ' comment' ~ ('s' if items.total != 1 else '')) if items else 'Comments') }}
+    <span class="muted small">{{ window.label if window else 'All time' }} · most negative first</span>
+  </div>
+  <div class="toolbar">
+    {{ seg_links('dashboard.comments', 'sentiment', [('', 'All'), ('negative', 'Negative'), ('neutral', 'Neutral'), ('positive', 'Positive')], sentiment) }}
+  </div>
+  {% if items is none %}
+    <div class="notice">This group has {{ total_in_group }} comment{{ 's' if total_in_group != 1 }} {{ 'this week' if window else 'so far' }}. Comments are shown once a group has at least {{ min_n }}, to protect student anonymity.</div>
+  {% else %}
+    {% for fb in items.items %}
+      <div class="comment">
+        <div>{{ fb.text }}</div>
+        <div class="meta">
+          {{ sentiment_badge(fb.sentiment.label) }}
+          <span class="badge plain">{{ fb.sentiment.topic|topic_label }}</span>
+          <span class="badge plain">{{ fb.unit.code }}</span>
+          {% if not window %}<span class="badge plain">{{ fb.window.label }}</span>{% endif %}
+          <span class="num">score {{ '%+.2f'|format(fb.sentiment.score) }}</span>
+          {% if fb.pii_redacted %}<span class="badge plain">personal details removed</span>{% endif %}
+        </div>
+      </div>
+    {% else %}
+      <p class="muted">No comments match these filters.</p>
+    {% endfor %}
+    {% if items.pages > 1 %}
+      <div class="actions" style="margin-top:1rem">
+        {% set args = dict(request.args) %}
+        {% if items.has_prev %}{% set _ = args.update(page=items.prev_num) %}<a class="pill-btn" href="{{ url_for('dashboard.comments', **args) }}">← Previous</a>{% endif %}
+        <span class="muted small" style="align-self:center">Page {{ items.page }} of {{ items.pages }}</span>
+        {% if items.has_next %}{% set _ = args.update(page=items.next_num) %}<a class="pill-btn" href="{{ url_for('dashboard.comments', **args) }}">Next →</a>{% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+<p class="footnote">Names, phone numbers, emails and ID numbers are removed automatically before comments are stored. Viewing comments is recorded in the access log.</p>
+{% endif %}
+{% endblock %}

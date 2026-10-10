@@ -1,0 +1,14 @@
+{
+  "name": "PSU Pulse (Flask + MySQL)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "forwardPorts": [5000],
+  "postCreateCommand": "pip install -r requirements.txt && git config core.hooksPath .githooks",
+  "containerEnv": {
+    "DB_HOST": "host.docker.internal"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance", "wholroyd.jinja"]
+    }
+  }
+}

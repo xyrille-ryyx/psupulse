@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ self.page_title()|striptags }} · PSU Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    // Apply the saved navigation state before the page paints (no flicker).
+    // Expanded by default; stays collapsed only if the user collapsed it on this device.
+    (function () {
+      let saved = null;
+      try { saved = localStorage.getItem('psupulse.rail'); } catch (e) {}
+      if (saved !== 'closed') document.documentElement.classList.add('rail-open');
+    })();
+  </script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if current_user.is_authenticated %}
+{% macro rail_link(endpoint, icon_name, label, active) -%}
+  <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active }}" data-tip="{{ label }}" aria-label="{{ label }}">{{ icon(icon_name) }}<span class="rail-label">{{ label }}</span></a>
+{%- endmacro %}
+<div class="app">
+  <aside class="rail" id="rail" aria-label="Main navigation">
+    <a class="rail-logo" href="{{ url_for('main.index') }}" aria-label="PSU Pulse home">
+      <img src="{{ url_for('static', filename='img/psu-logo.png') }}" alt="Pangasinan State University seal">
+      <span class="rail-brand">PSU Pulse<small>Pangasinan State University</small></span>
+    </a>
+    <nav class="rail-nav">
+      {% if current_user.role == 'student' %}
+        {{ rail_link('feedback.submit', 'pencil', 'Weekly feedback', request.blueprint == 'feedback') }}
+      {% else %}
+        {{ rail_link('dashboard.index', 'dashboard', 'Dashboard', request.endpoint == 'dashboard.index') }}
+        {{ rail_link('dashboard.comments', 'comments', 'Comments', request.endpoint == 'dashboard.comments') }}
+        {{ rail_link('reports.index', 'reports', 'Weekly reports', request.blueprint == 'reports') }}
+        {{ rail_link('alerts.index', 'alert', 'Alerts', request.blueprint == 'alerts') }}
+      {% endif %}
+      {% if current_user.role == 'admin' %}
+        <span class="rail-sep" role="separator"><span class="rail-label">Administration</span></span>
+        {{ rail_link('admin.index', 'grid', 'Admin overview', request.endpoint == 'admin.index') }}
+        {{ rail_link('admin.windows', 'calendar', 'Feedback windows', request.endpoint == 'admin.windows') }}
+        {{ rail_link('admin.users', 'users', 'Users', request.endpoint in ('admin.users', 'admin.user_edit')) }}
+        {{ rail_link('admin.units', 'building', 'Units', request.endpoint == 'admin.units') }}
+        {{ rail_link('admin.analyzer', 'flask', 'Analyzer lab', request.endpoint == 'admin.analyzer') }}
+        {{ rail_link('admin.settings', 'settings', 'Settings', request.endpoint == 'admin.settings') }}
+        {{ rail_link('admin.changelog', 'history', 'Change log', request.endpoint == 'admin.changelog') }}
+        {{ rail_link('admin.access_logs', 'shield', 'Access log', request.endpoint == 'admin.access_logs') }}
+      {% endif %}
+    </nav>
+    <div class="rail-foot">
+      {{ rail_link('main.guide', 'help', 'Guide', request.endpoint == 'main.guide') }}
+    </div>
+    <button type="button" class="rail-toggle" id="rail-toggle" aria-controls="rail" aria-expanded="false" aria-label="Expand menu" data-tip="Expand menu">
+      {{ icon('chevron-right', 14) }}
+    </button>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>{% block page_title %}PSU Pulse{% endblock %}</h1>
+        <p>{% block page_subtitle %}{% endblock %}</p>
+      </div>
+      <div class="top-actions">
+        {% block header_actions %}{% endblock %}
+        {% if current_user.is_staff %}
+          <a class="icon-btn" href="{{ url_for('alerts.index') }}" aria-label="Alerts ({{ active_alert_count }} active)" title="Alerts">
+            {{ icon('bell', 18) }}{% if active_alert_count %}<span class="count">{{ active_alert_count if active_alert_count < 100 else '99+' }}</span>{% endif %}
+          </a>
+        {% endif %}
+        <details class="avatar-menu">
+          <summary aria-label="Account menu">
+            <span class="avatar">{{ current_user.full_name|initials }}</span>{{ icon('chevron', 16) }}
+          </summary>
+          <div class="menu-panel">
+            <div class="menu-head">
+              <strong>{{ current_user.full_name }}</strong>
+              <span>{{ current_user.role_label }}</span>
+            </div>
+            <a href="{{ url_for('auth.change_password') }}">{{ icon('lock', 16) }} Change password</a>
+            <a href="{{ url_for('main.privacy') }}">{{ icon('shield', 16) }} Privacy notice</a>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">{{ icon('logout', 16) }} Sign out</button>
+            </form>
+          </div>
+        </details>
+      </div>
+    </header>
+    <main class="content">
+      {% include "_flashes.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script>
+  // Close the account menu when clicking elsewhere.
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('details.avatar-menu[open]').forEach((d) => { if (!d.contains(e.target)) d.removeAttribute('open'); });
+  });
+</script>
+{% else %}
+{% block public %}
+<main class="auth-shell {% block auth_class %}{% endblock %}">
+  <div class="auth-card">
+    {% include "_flashes.html" %}
+    {% block auth_content %}{% endblock %}
+  </div>
+</main>
+{% endblock %}
+{% endif %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

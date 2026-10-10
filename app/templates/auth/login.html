@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block page_title %}Sign in{% endblock %}
+{% block auth_class %}auth-photo{% endblock %}
+{% block auth_content %}
+<div class="card">
+  <img class="auth-logo" src="{{ url_for('static', filename='img/psu-logo.png') }}" alt="Pangasinan State University seal">
+  <div class="brand">PSU Pulse</div>
+  <p class="muted small" style="text-align:center">Weekly student feedback, sentiment and trends</p>
+  <form method="post" data-remember>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <div class="field">
+      <label class="check"><input type="checkbox" name="remember" value="1"> Remember me</label>
+    </div>
+    <button class="btn" type="submit" style="width:100%">Sign in</button>
+  </form>
+  <p class="auth-privacy">
+    <a href="{{ url_for('main.privacy') }}">{{ icon('lock', 14) }} Anonymous &amp; private</a>
+  </p>
+</div>
+<p class="auth-back"><a href="{{ url_for('main.index') }}">← Back to home</a></p>
+{% endblock %}

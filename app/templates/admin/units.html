@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Units{% endblock %}
+{% block page_subtitle %}Colleges, departments and courses used to group feedback{% endblock %}
+{% macro tree(unit, depth=0) %}
+  <tr>
+    <td style="padding-left:{{ 0.6 + depth * 1.5 }}rem"><strong>{{ unit.code }}</strong></td>
+    <td>{{ unit.name }}</td>
+    <td class="small">{{ unit.unit_type|capitalize }}</td>
+    <td class="small muted">{{ unit.users|length }}</td>
+  </tr>
+  {% for child in unit.children %}{{ tree(child, depth + 1) }}{% endfor %}
+{% endmacro %}
+{% block content %}
+
+<form class="card" method="post" action="{{ url_for('admin.unit_create') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card-head">{{ card_title("plus", "Add a unit") }}</div>
+  <div class="field-row">
+    <div class="field" style="max-width:150px"><label for="c">Code</label><input id="c" name="code" type="text" placeholder="IT 311" required></div>
+    <div class="field"><label for="n">Name</label><input id="n" name="name" type="text" required></div>
+    <div class="field" style="max-width:170px"><label for="t">Type</label>
+      <select id="t" name="unit_type"><option value="course">Course</option><option value="department">Department</option><option value="college">College</option></select></div>
+    <div class="field"><label for="p">Parent</label>
+      <select id="p" name="parent_id"><option value="">— none (colleges) —</option>
+        {% for u in parents %}<option value="{{ u.id }}">{{ u.code }} — {{ u.name }}</option>{% endfor %}</select></div>
+    <button class="btn" type="submit">Add</button>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Linked users</th></tr></thead>
+    <tbody>
+      {% for college in colleges %}{{ tree(college) }}{% endfor %}
+      {% for u in orphans %}{{ tree(u) }}{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

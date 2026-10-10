@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block page_title %}Not found{% endblock %}
+{% macro body() %}<div class="card empty"><h1>Page not found</h1><p>The page you're looking for doesn't exist.</p><a class="btn" href="{{ url_for('main.index') }}">Go to home</a></div>{% endmacro %}
+{% block content %}{{ body() }}{% endblock %}
+{% block auth_content %}{{ body() }}{% endblock %}

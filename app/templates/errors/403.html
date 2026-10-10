@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block page_title %}Access denied{% endblock %}
+{% macro body() %}<div class="card empty"><h1>Access denied</h1><p>You don't have permission to view this page.</p><a class="btn" href="{{ url_for('main.index') }}">Go to home</a></div>{% endmacro %}
+{% block content %}{{ body() }}{% endblock %}
+{% block auth_content %}{{ body() }}{% endblock %}

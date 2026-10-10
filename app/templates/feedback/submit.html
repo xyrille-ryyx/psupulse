@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Weekly feedback{% endblock %}
+{% block page_subtitle %}{% if window %}{{ window.label }} · {{ window|window_dates }} · Your comments are anonymous{% else %}Share how your week went. Your comments are anonymous{% endif %}{% endblock %}
+{% block content %}
+
+<div class="grid grid-3">
+  <div class="span-2">
+    {% if not window %}
+      <div class="card empty">
+        <h2>Feedback is closed for now</h2>
+        <p>The next weekly feedback window hasn't opened yet. Please check back soon.</p>
+      </div>
+    {% elif not courses %}
+      <div class="card empty">
+        <h2>No enrolled courses found</h2>
+        <p>Please ask the system administrator to link your courses to your account.</p>
+      </div>
+    {% else %}
+      <form class="card" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-head">{{ card_title('pencil', "Send this week's feedback") }}</div>
+        <div class="field">
+          <label>Which course is this about?</label>
+          <div class="course-list">
+            {% for c in courses %}
+              <label class="course-option {{ 'done' if status[c.id] }}">
+                <span>
+                  <input type="radio" name="unit_id" value="{{ c.id }}" {{ 'disabled' if status[c.id] }} required>
+                  {{ c.code }} — {{ c.name }}
+                </span>
+                {% if status[c.id] %}<span class="badge b-resolved">Sent this week</span>{% endif %}
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="field">
+          <label for="comment">Your comment</label>
+          <textarea id="comment" name="comment" minlength="{{ min_chars }}" maxlength="{{ max_chars }}" required
+            placeholder="How was this week? What worked well, and what should improve? English, Filipino, or Taglish are all fine."></textarea>
+          <div class="hint"><span id="count">0</span> / {{ max_chars }} characters · Please don't include names, phone numbers, or ID numbers.</div>
+        </div>
+        <button class="pill-btn primary" type="submit">{{ icon('send', 16) }} Submit anonymously</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head">{{ card_title('shield', 'Your privacy') }}</div>
+      <p class="small muted">Your comment is stored without your name or student number. Staff only see results combined with other students' comments. <a href="{{ url_for('main.privacy') }}">Read more</a></p>
+    </div>
+    <div class="card">
+      <div class="card-head">{{ card_title('check', 'You said, we did', 'gold') }}</div>
+      {% for a in actions %}
+        <div class="comment">
+          <div class="small"><strong>{{ a.unit.code if a.unit else 'University-wide' }}</strong> · {{ a.type_label }}</div>
+          <div>{{ a.action_notes }}</div>
+          <div class="meta">{{ a.updated_at.strftime('%b %d, %Y') }}</div>
+        </div>
+      {% else %}
+        <p class="small muted">Actions taken in response to student feedback will appear here.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const box = document.getElementById('comment'), count = document.getElementById('count');
+  if (box) box.addEventListener('input', () => { count.textContent = box.value.length; });
+</script>
+{% endblock %}

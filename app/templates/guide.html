@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Guide{% endblock %}
+{% block page_subtitle %}How PSU Pulse works, and what you can do as {{ current_user.role_label }}{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head">{{ card_title('calendar', 'The weekly cycle') }}</div>
+    <ol class="muted" style="margin:0;padding-left:1.1rem;display:grid;gap:.45rem">
+      <li>Each week, a feedback window opens for students.</li>
+      <li>Students send short, anonymous comments about their courses.</li>
+      <li>When the window closes, each comment's <strong>sentiment</strong> (positive, negative or neutral) and <strong>topic</strong> are found automatically by text analysis.</li>
+      <li>Results are combined by week, course, department and college, and a weekly report is generated.</li>
+      <li>Alerts flag sharp rises in negative comments, recurring concerns and safety issues, and staff record what was done.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <div class="card-head">{{ card_title('user', 'What you can do') }}</div>
+    <ul class="muted" style="margin:0;padding-left:1.1rem;display:grid;gap:.45rem">
+      {% if current_user.role == 'student' %}
+        <li>Send one comment per course each week from <a href="{{ url_for('feedback.submit') }}">Weekly feedback</a>.</li>
+        <li>Write in English, Filipino or Taglish. Don't include names or numbers.</li>
+        <li>See what changed because of student feedback under <em>You said, we did</em>.</li>
+      {% else %}
+        <li><a href="{{ url_for('dashboard.index') }}">Dashboard</a>: sentiment, trends, topics and keywords for your units.</li>
+        <li><a href="{{ url_for('dashboard.comments') }}">Comments</a>: read the anonymous comments, filtered by sentiment and topic.</li>
+        <li><a href="{{ url_for('reports.index') }}">Weekly reports</a>: print or download each week's report as CSV.</li>
+        <li><a href="{{ url_for('alerts.index') }}">Alerts</a>: review flagged concerns{% if current_user.role in ('dept_head', 'student_affairs', 'admin') %} and record the action taken{% endif %}.</li>
+        {% if current_user.role == 'admin' %}<li>Admin pages: open and process feedback windows, manage users and units, tune thresholds and test the analyzer.</li>{% endif %}
+      {% endif %}
+    </ul>
+  </div>
+</div>
+<div class="card">
+  <div class="card-head">{{ card_title('shield', 'Privacy') }}</div>
+  <p class="muted" style="margin:0">Comments are stored without names or student numbers, personal details are removed automatically, and results for groups with fewer than 5 comments are hidden. <a href="{{ url_for('main.privacy') }}">Read the privacy notice</a>.</p>
+</div>
+{% endblock %}

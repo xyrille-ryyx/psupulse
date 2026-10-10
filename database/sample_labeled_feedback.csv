@@ -1,0 +1,60 @@
+text,label,annotator_2
+"Sir explains every topic patiently, I finally understand normalization.",positive,positive
+"Ang linaw ng explanation ni maam sa recursion, salamat po!",positive,positive
+"Great lab session, the hands-on exercise really helped.",positive,positive
+"Maganda yung bagong library, tahimik at presko.",positive,positive
+"Thank you to the registrar staff, mabilis lang ang processing ng TOR ko.",positive,positive
+"The guidance counselor was very kind and understanding.",positive,positive
+"I love how our prof connects the lessons to real projects.",positive,positive
+"Super helpful yung review session bago ang quiz.",positive,positive
+"Malinis na ang CR sa second floor, salamat!",positive,positive
+"The online portal is much faster now, enrollment took only minutes.",positive,positive
+"Ang saya ng class natin, ganado ako mag-aral.",positive,positive
+"Our instructor is always on time and well prepared.",positive,positive
+"The feedback on our project was detailed and useful.",positive,positive
+"Not bad, the module this week was easy to follow.",positive,neutral
+"Ayos naman yung activity, natutunan ko yung basics ng SQL.",positive,positive
+"Highly recommend this elective, very interesting topics.",positive,positive
+"The guards are attentive and I feel safe on campus.",positive,positive
+"Bongga yung event ng org, well organized!",positive,positive
+"The aircon in room 204 is broken and it is extremely hot.",negative,negative
+"Ang bagal ng wifi, hindi ma-open ang LMS during quiz.",negative,negative
+"Too many deadlines this week, I am overwhelmed.",negative,negative
+"Hindi maganda yung pagtuturo, puro basa lang ng slides.",negative,negative
+"The professor did not show up again and no announcement was made.",negative,negative
+"Nakakainis yung haba ng pila sa cashier.",negative,negative
+"The comfort room has no water and smells bad.",negative,negative
+"Walang kwenta yung group activity, isa lang gumawa.",negative,negative
+"The instructions for the case study are confusing and unclear.",negative,negative
+"Grabe ang workload, wala na kaming tulog.",negative,negative
+"The portal crashed twice while I was enrolling, very frustrating.",negative,negative
+"It is dark near the parking area at night, it feels dangerous.",negative,negative
+"Masungit yung staff sa registrar kapag nagtatanong.",negative,negative
+"Sira ang projector kaya hindi natuloy ang presentation namin.",negative,negative
+"The quiz was unfair because it covered topics we never discussed.",negative,negative
+"Medyo mahirap yung exam pero okay lang.",negative,neutral
+"I am disappointed that our grades are still not released.",negative,negative
+"Mainit at siksikan sa computer lab.",negative,negative
+"The lessons are good but the pacing is way too fast.",negative,negative
+"Maganda ang topic pero sobrang bagal ng internet.",negative,negative
+"We had our midterm exam on Thursday.",neutral,neutral
+"Please upload the slides for chapter 5.",neutral,neutral
+"May quiz daw sa Monday sabi ni sir.",neutral,neutral
+"The class will be held online next week.",neutral,neutral
+"Sana may sample problems sa susunod na lesson.",neutral,neutral
+"We discussed software testing and debugging.",neutral,neutral
+"When is the deadline for the research proposal?",neutral,neutral
+"Nag-lab kami ngayong linggo para sa networking.",neutral,neutral
+"The enrollment schedule for second semester is posted.",neutral,neutral
+"Our group presented on Friday.",neutral,neutral
+"Can the consultation be moved to Wednesday?",neutral,neutral
+"Lumipat kami ng room dahil sa event.",neutral,neutral
+"The reading assignment is chapters 6 and 7.",neutral,neutral
+"Wala pa po kaming topic para sa final project.",neutral,neutral
+"We will have a seminar on cybersecurity next month.",neutral,neutral
+"The class is okay, nothing special this week.",neutral,neutral
+"Sir is good but the room is too hot.",negative,neutral
+"Yeah great, another surprise quiz. Just perfect.",negative,negative
+"Okay naman, pero sana mas maaga ma-post yung grades.",neutral,negative
+"Ang ganda ng discussion today, ang dami kong natutunan :)",positive,positive
+"Sobrang helpful ng tutor sa math center.",positive,positive

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block page_title %}Privacy notice{% endblock %}
+{% block page_subtitle %}How PSU Pulse protects your identity under the Data Privacy Act of 2012{% endblock %}
+
+{% macro notice() %}
+<div class="card">
+  <h1>Privacy notice</h1>
+  <p class="muted">PSU Pulse follows the Data Privacy Act of 2012 (Republic Act No. 10173).</p>
+  <h3>What we collect</h3>
+  <p>Your comment, the course you're commenting on, and the date you sent it. We do not save your name or student number with your comment.</p>
+  <h3>How we keep you anonymous</h3>
+  <ul>
+    <li>Your comment is saved <strong>without your name or ID</strong>. To stop duplicate submissions, we keep a scrambled one-way code that can't be turned back into your identity.</li>
+    <li>Personal details you type (names after "my name is", phone numbers, emails, ID numbers, links) are <strong>removed automatically</strong> before anyone reads the comment.</li>
+    <li>Results for a class are shown only when at least the minimum number of students have commented, so no single person can be singled out.</li>
+    <li>Only authorized staff can see results, and only for the units they handle. Every report view and download is logged.</li>
+  </ul>
+  <h3>How your feedback is used</h3>
+  <p>Comments are grouped by week, course and topic, and their sentiment (positive, negative or neutral) is measured automatically. Staff use the weekly reports to act on recurring concerns.</p>
+  <h3>Questions</h3>
+  <p>Contact the Student Affairs office or the university Data Protection Officer.</p>
+  {% if not current_user.is_authenticated %}<p><a href="{{ url_for('auth.login') }}">← Back to sign in</a></p>{% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}<div style="max-width:760px">{{ notice() }}</div>{% endblock %}
+{% block auth_content %}{{ notice() }}{% endblock %}

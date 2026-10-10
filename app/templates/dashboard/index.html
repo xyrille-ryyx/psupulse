@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sentiment_bar, delta, unit_filter, stat_card, card_title, filter_chips with context %}
+{% block page_title %}{{ unit.name if unit else 'University-wide sentiment' }}{% endblock %}
+{% block page_subtitle %}{% if unit %}{{ unit.code }} · {{ unit.unit_type|capitalize }} · {% endif %}{% if window %}How students felt in {{ window.label }}, {{ window|window_dates }}{% elif windows %}All time: {{ windows|length }} processed week{{ 's' if windows|length != 1 }}{% else %}Weekly student sentiment{% endif %}{% endblock %}
+{% block content %}
+
+{% if not windows %}
+  <div class="card empty">
+    <span class="ci" style="margin:0 auto .75rem">{{ icon('inbox', 20) }}</span>
+    <h2>No processed weeks yet</h2>
+    <p>Results appear here after a feedback window closes and is processed.</p>
+  </div>
+{% else %}
+<form class="filters" method="get">
+  <div class="field">
+    <label for="window">Week</label>
+    <select id="window" name="window" onchange="this.form.submit()">
+      <option value="all" {{ 'selected' if window_param == 'all' }}>All time ({{ windows|length }} week{{ 's' if windows|length != 1 }})</option>
+      {% for w in windows %}<option value="{{ w.id }}" {{ 'selected' if window and w.id == window.id }}>{{ w.label }} ({{ w|window_dates }})</option>{% endfor %}
+    </select>
+  </div>
+  {{ unit_filter(unit_choices, unit_id, can_overall) }}
+{% set chips = [] %}
+{% if window_param != default_window %}{% set _ = chips.append(('window', 'Week', window.label if window else 'All time')) %}{% endif %}
+{% if unit_id != default_unit_id %}{% set _ = chips.append(('unit', 'Unit', unit.code if unit else 'University-wide')) %}{% endif %}
+{{ filter_chips('dashboard.index', chips) }}
+  <noscript><button class="btn btn-ghost" type="submit">Apply</button></noscript>
+</form>
+{% if suppressed %}
+  <div class="notice" style="margin-bottom:1.25rem">
+    {% set period = 'this week' if window else 'so far' %}{% if agg %}Only {{ agg.total }} comment{{ 's' if agg.total != 1 }} {{ period }}{% else %}No comments {{ period }}{% endif %}.
+    Results are shown once a group has at least {{ min_n }} comments, so no student can be identified.
+  </div>
+{% else %}
+<div class="grid grid-4">
+  {{ stat_card('comments', 'Comments this week' if window else 'Comments, all time', agg.total, 'Average score %+.2f (−1 to +1)'|format(agg.avg_score)) }}
+  {{ stat_card('smile', 'Positive', agg.positive_share|pct, agg.positive ~ ' comments', value_tone='blue') }}
+  {{ stat_card('frown', 'Negative', agg.negative_share|pct, agg.negative ~ ' comments' ~ ((' · ' ~ (agg.delta_negative_share|signed_pts) ~ ' vs last week') if agg.delta_negative_share is not none else ''), tone='gold', value_tone='gold') }}
+  {{ stat_card('meh', 'Neutral', agg.neutral_share|pct, agg.neutral ~ ' comments', tone='gray') }}
+</div>
+{% endif %}
+
+{# ---------------- trend: chart left, legend + weekly table right ---------------- #}
+<div class="card" style="margin-top:1.25rem">
+  <div class="card-head">
+    {{ card_title('trend', 'Sentiment trend by week') }}
+  </div>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Trend measure" data-chart-toggle="trend">
+      <button type="button" class="on" data-mode="share">Share of comments</button>
+      <button type="button" data-mode="count">Number of comments</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="panel">
+      <div class="chart-box tall"><canvas id="trend-chart" aria-label="Weekly sentiment trend" role="img"></canvas></div>
+    </div>
+    <div>
+      <p class="side-title">Legend</p>
+      <ul class="legend-list">
+        <li><span class="swatch sw-pos"></span>Positive</li>
+        <li><span class="swatch sw-neg"></span>Negative</li>
+        <li><span class="swatch sw-neu"></span>Neutral</li>
+        <li><span class="swatch sw-hidden"></span>Fewer than {{ min_n }} comments: hidden for privacy</li>
+      </ul>
+      <p class="side-title">Weeks</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Week</th><th class="num">Comments</th><th class="num">Positive</th><th class="num">Negative</th><th class="num">Neutral</th></tr></thead>
+        <tbody>
+        {% for i in range(trend.labels|length)|reverse %}
+          <tr><td>{{ trend.labels[i] }}</td><td class="num">{{ trend.total[i] }}</td>
+            {% for k in ('positive', 'negative', 'neutral') %}<td class="num">{{ '%s%%'|format(trend[k][i]) if trend[k][i] is not none else 'Hidden' }}</td>{% endfor %}</tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+{% if not suppressed %}
+{# ---------------- topics: chart left, legend + topic table right ---------------- #}
+<div class="card">
+  <div class="card-head">
+    {{ card_title('tag', 'Concerns by topic') }}
+    <a class="pill-btn" href="{{ url_for('dashboard.comments', window=window_param, unit=unit_id if unit_id else 'all') }}">{{ icon('comments', 16) }} Read comments</a>
+  </div>
+  <div class="split">
+    <div class="panel">
+      <div class="chart-box tall"><canvas id="topic-chart" aria-label="Comments by topic and sentiment" role="img"></canvas></div>
+    </div>
+    <div>
+      <p class="side-title">{{ 'Topics this week' if window else 'Topics, all time' }}</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Topic</th><th class="num">Comments</th><th class="num">Negative</th></tr></thead>
+        <tbody>{% for t in agg.topics %}<tr>
+          <td><a href="{{ url_for('dashboard.comments', window=window_param, unit=unit_id if unit_id else 'all', topic=t.topic) }}">{{ t.topic|topic_label }}</a></td>
+          <td class="num">{{ t.total }}</td>
+          <td class="num">{{ t.negative }} <span class="muted small">({{ (t.negative / t.total)|pct }})</span></td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head">
+      {{ card_title('bell', 'Active alerts', 'gold') }}
+      <a class="small" href="{{ url_for('alerts.index') }}">All alerts</a>
+    </div>
+    {% for a in alerts %}
+      <div class="comment">
+        <div class="actions"><span class="badge b-{{ a.severity }}">{{ a.severity|capitalize }}</span><span class="badge b-{{ a.status }}">{{ a.status|capitalize }}</span></div>
+        <div class="small" style="margin-top:.35rem">{{ a.message }}</div>
+        <div class="meta">{{ a.window.label }}</div>
+      </div>
+    {% else %}
+      <p class="muted small">No active alerts in your units.</p>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head">{{ card_title('hash', 'Recurring keywords') }}<span class="muted small">comments mentioning</span></div>
+    {% if not suppressed and agg.keywords %}
+      <div class="chips">{% for term, n in agg.keywords %}<span class="chip">{{ term }}<b>{{ n }}</b></span>{% endfor %}</div>
+    {% else %}<p class="muted small">Not enough repeated terms this week.</p>{% endif %}
+  </div>
+</div>
+
+{% if children %}
+<div class="card">
+  <div class="card-head">{{ card_title('layers', 'Breakdown by unit') }}<span class="muted small">{{ window.label if window else 'All time' }}</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Unit</th><th class="num">Comments</th><th>Sentiment</th><th class="num">Positive</th><th class="num">Negative</th><th class="num">Change (neg.)</th><th>Top topic</th></tr></thead>
+    <tbody>
+    {% for c in children %}
+      <tr>
+        <td><a href="{{ url_for('dashboard.index', window=window_param, unit=c.unit_id) }}">{{ c.unit.code }}</a> <span class="muted small">{{ c.unit.name }}</span></td>
+        <td class="num">{{ c.total }}</td>
+        {% if c.total < min_n %}
+          <td colspan="5" class="muted small">Hidden: fewer than {{ min_n }} comments</td>
+        {% else %}
+          <td>{{ sentiment_bar(c) }}</td>
+          <td class="num">{{ c.positive_share|pct }}</td>
+          <td class="num">{{ c.negative_share|pct }}</td>
+          <td class="num">{{ delta(c.delta_negative_share) }}</td>
+          <td>{{ (c.topics[0].topic if c.topics else 'general')|topic_label }}</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<p class="footnote">Each comment is counted once, in the week it was submitted. Totals only, no names. Sentiment and topics are found automatically by text and sentiment analysis.</p>
+
+<script type="application/json" id="trend-data">{{ trend|tojson }}</script>
+{% if not suppressed %}
+<script type="application/json" id="topic-data">{{ {
+  'labels': agg.topics|map(attribute='topic')|map('topic_label')|list,
+  'positive': agg.topics|map(attribute='positive')|list,
+  'negative': agg.topics|map(attribute='negative')|list,
+  'neutral': agg.topics|map(attribute='neutral')|list,
+}|tojson }}</script>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

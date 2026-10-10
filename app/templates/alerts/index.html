@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import seg_links, filter_chips with context %}
+{% block page_title %}Alerts{% endblock %}
+{% block page_subtitle %}Raised automatically for rises in negative sentiment, high negativity, recurring topics and safety concerns{% endblock %}
+{% block content %}
+
+<div class="toolbar">
+  {{ seg_links('alerts.index', 'status', [('active', 'Active'), ('open', 'Open'), ('acknowledged', 'Acknowledged'), ('resolved', 'Resolved'), ('all', 'All')], status) }}
+  <span class="muted small">{{ alerts|length }} alert{{ 's' if alerts|length != 1 }}</span>
+{% set chips = [] %}
+{% if request.args.get('status') and status != 'active' %}{% set _ = chips.append(('status', 'Status', {'open': 'Open', 'acknowledged': 'Acknowledged', 'resolved': 'Resolved', 'all': 'All'}.get(status, status))) %}{% endif %}
+{{ filter_chips('alerts.index', chips) }}
+</div>
+{% for a in alerts %}
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="actions" style="margin-bottom:.35rem">
+          <span class="badge b-{{ a.severity }}">{{ a.severity|capitalize }}</span>
+          <span class="badge b-{{ a.status }}">{{ a.status|capitalize }}</span>
+          <span class="badge plain">{{ a.type_label }}</span>
+          {% if a.topic %}<span class="badge plain">{{ a.topic|topic_label }}</span>{% endif %}
+        </div>
+        <h3 style="margin:0">{{ a.message }}</h3>
+      </div>
+      <span class="small muted">{{ a.window.label }}</span>
+    </div>
+    <div class="small muted">
+      {{ a.unit.label if a.unit else 'University-wide' }}
+      · <a href="{{ url_for('dashboard.comments', window=a.window_id, unit=a.unit_id if a.unit_id else 'all', topic=a.topic or '', sentiment='negative') }}">Read the negative comments</a>
+    </div>
+    {% if a.action_notes %}
+      <div class="notice" style="margin-top:.75rem"><strong>Action taken:</strong> {{ a.action_notes }}
+        {% if a.handled_by %}<span class="muted">— {{ a.handled_by.full_name }}, {{ a.updated_at.strftime('%b %d') }}</span>{% endif %}
+        {% if a.public_note %}<span class="badge plain">Shared with students</span>{% endif %}
+      </div>
+    {% endif %}
+    {% if can_manage and a.status != 'resolved' %}
+      <form method="post" action="{{ url_for('alerts.update', alert_id=a.id) }}" style="margin-top:.75rem">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="return_status" value="{{ status }}">
+        <div class="field">
+          <label for="notes-{{ a.id }}">Action taken / follow-up notes</label>
+          <textarea id="notes-{{ a.id }}" name="action_notes" style="min-height:70px" placeholder="What was done in response?">{{ a.action_notes or '' }}</textarea>
+        </div>
+        <div class="field-row">
+          <label class="check"><input type="checkbox" name="public_note" value="1"> Share the action with students ("You said, we did")</label>
+          <div class="actions">
+            {% if a.status == 'open' %}<button class="btn btn-ghost btn-sm" name="status" value="acknowledged">Acknowledge</button>{% endif %}
+            <button class="btn btn-sm" name="status" value="resolved">Mark resolved</button>
+          </div>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card empty">No alerts to show.</div>
+{% endfor %}
+{% endblock %}

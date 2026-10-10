@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block page_title %}Weekly student feedback and sentiment analysis{% endblock %}
+{% block public %}
+<div class="lp">
+  <div class="lp-toast">{% include "_flashes.html" %}</div>
+
+  <!-- ============ navigation ============ -->
+  <header class="lp-nav">
+    <div class="lp-wrap lp-nav-inner">
+      <a class="lp-brand" href="{{ url_for('main.index') }}">
+        <img src="{{ url_for('static', filename='img/psu-logo.png') }}" alt="Pangasinan State University seal">
+        <span>PSU Pulse<small>Pangasinan State University</small></span>
+      </a>
+      <nav class="lp-links" id="lp-links" aria-label="Page sections">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#roles">Who it's for</a>
+        <a href="#privacy">Privacy</a>
+      </nav>
+      <a class="pill-btn primary" href="{{ url_for('auth.login') }}">Sign in</a>
+    </div>
+  </header>
+
+  <!-- ============ hero ============ -->
+  <section class="lp-hero">
+    <div class="lp-wrap lp-hero-grid">
+      <div>
+        <span class="lp-eyebrow">Student feedback, made actionable</span>
+        <h1>Hear every student, <span class="lp-gold">every week.</span></h1>
+        <p class="lp-lead">PSU Pulse collects anonymous weekly feedback from students, measures its sentiment automatically, and turns scattered comments into clear trends, alerts and reports for the people who can act on them.</p>
+        <div class="lp-cta">
+          <a class="lp-btn lp-btn-gold" href="{{ url_for('auth.login') }}">Sign in to PSU Pulse</a>
+          <a class="lp-btn lp-btn-ghost" href="#how">See how it works</a>
+        </div>
+        <ul class="lp-ticks">
+          <li>{{ icon('check', 16) }} Anonymous by design</li>
+          <li>{{ icon('check', 16) }} English, Filipino &amp; Taglish</li>
+          <li>{{ icon('check', 16) }} Weekly, not end-of-term</li>
+        </ul>
+      </div>
+
+      <!-- illustrative product preview (static, not live data) -->
+      <div class="lp-preview" aria-hidden="true">
+        <div class="lp-window">
+          <div class="lp-window-bar"><span></span><span></span><span></span><em>Weekly dashboard</em></div>
+          <div class="lp-window-body">
+            <div class="lp-mini-stats">
+              <div><small>Positive</small><b class="t-blue">58%</b></div>
+              <div><small>Negative</small><b class="t-gold">22%</b></div>
+              <div><small>Neutral</small><b>20%</b></div>
+            </div>
+            <div class="lp-mini-chart">
+              {% for h in [62, 70, 54, 48, 66, 74, 58, 80] %}
+                <div class="lp-col"><span class="b" style="height:{{ h }}%"></span><span class="g" style="height:{{ 100 - h - 12 }}%"></span></div>
+              {% endfor %}
+            </div>
+            <div class="lp-mini-alert">
+              <span class="badge b-high">High</span>
+              <span>Facilities: negative comments up 18 points this week</span>
+            </div>
+          </div>
+        </div>
+        <div class="lp-float lp-float-1">{{ icon('smile', 18) }} "Napakagaling magturo ni sir!"<em>Positive</em></div>
+        <div class="lp-float lp-float-2">{{ icon('frown', 18) }} "Sira pa rin yung aircon sa room."<em>Negative · Facilities</em></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ problem ============ -->
+  <section class="lp-section lp-problem">
+    <div class="lp-wrap">
+      <p class="lp-kicker">The problem</p>
+      <h2>Student comments are collected, but rarely heard in time.</h2>
+      <div class="lp-grid-3">
+        <div class="lp-card">
+          <span class="ci gold">{{ icon('history', 20) }}</span>
+          <h3>Reviewed too late</h3>
+          <p>Feedback is usually read at the end of the term, after the chance to fix things has passed.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci gold">{{ icon('users', 20) }}</span>
+          <h3>Read inconsistently</h3>
+          <p>Reading comments by hand is slow, and different readers judge the same comment differently.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci gold">{{ icon('layers', 20) }}</span>
+          <h3>Patterns stay hidden</h3>
+          <p>Without grouping by week, course and topic, recurring concerns grow into larger complaints.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ how it works ============ -->
+  <section class="lp-section lp-tint" id="how">
+    <div class="lp-wrap">
+      <p class="lp-kicker">How it works</p>
+      <h2>A simple weekly feedback loop</h2>
+      <ol class="lp-steps">
+        <li>
+          <span class="lp-step-no">1</span>
+          <h3>Collect</h3>
+          <p>A feedback window opens each week. Students send short, anonymous comments about their courses.</p>
+        </li>
+        <li>
+          <span class="lp-step-no">2</span>
+          <h3>Analyze</h3>
+          <p>Text and sentiment analysis labels every comment positive, negative or neutral, and groups it by topic.</p>
+        </li>
+        <li>
+          <span class="lp-step-no">3</span>
+          <h3>Summarize</h3>
+          <p>Results are combined by week, course, department and college into dashboards and a weekly report.</p>
+        </li>
+        <li>
+          <span class="lp-step-no">4</span>
+          <h3>Act</h3>
+          <p>Alerts flag rising concerns. Staff record what they did, and students see the response.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ features ============ -->
+  <section class="lp-section" id="features">
+    <div class="lp-wrap">
+      <p class="lp-kicker">Features</p>
+      <h2>Everything needed to turn feedback into action</h2>
+      <div class="lp-grid-3">
+        <div class="lp-card">
+          <span class="ci">{{ icon('pencil', 20) }}</span>
+          <h3>Anonymous weekly feedback</h3>
+          <p>One comment per course each week. No names are stored, and duplicate submissions are blocked without tracking who wrote what.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci">{{ icon('smile', 20) }}</span>
+          <h3>Automatic sentiment analysis</h3>
+          <p>A lightweight text-analysis model reads English, Filipino and Taglish, handling negation like "hindi maganda" and emphasis like "sobrang init".</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci">{{ icon('tag', 20) }}</span>
+          <h3>Topics and keywords</h3>
+          <p>Comments are grouped into concerns such as instruction, facilities, workload, enrollment and safety, with recurring keywords highlighted.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci">{{ icon('trend', 20) }}</span>
+          <h3>Trend dashboards</h3>
+          <p>See sentiment week by week for the whole university, a college, a department or a single course.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci">{{ icon('bell', 20) }}</span>
+          <h3>Alerts and follow-up</h3>
+          <p>Sharp rises in negative comments, recurring topics and safety concerns are flagged, and every response is tracked.</p>
+        </div>
+        <div class="lp-card">
+          <span class="ci">{{ icon('reports', 20) }}</span>
+          <h3>Weekly reports</h3>
+          <p>A print-ready summary is generated every week, with CSV export for further analysis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ roles ============ -->
+  <section class="lp-section lp-tint" id="roles">
+    <div class="lp-wrap">
+      <p class="lp-kicker">Who it's for</p>
+      <h2>The right view for every role</h2>
+      <div class="lp-roles">
+        <div class="lp-role"><span class="ci">{{ icon('pencil', 18) }}</span><div><h3>Students</h3><p>A quick, safe way to be heard every week, and to see what changed because of it.</p></div></div>
+        <div class="lp-role"><span class="ci">{{ icon('user', 18) }}</span><div><h3>Faculty</h3><p>Sentiment and topics for their own courses, to improve teaching during the term.</p></div></div>
+        <div class="lp-role"><span class="ci">{{ icon('building', 18) }}</span><div><h3>Department heads</h3><p>Department-wide trends, course comparisons and weekly reports.</p></div></div>
+        <div class="lp-role"><span class="ci">{{ icon('shield', 18) }}</span><div><h3>Student Affairs &amp; Guidance</h3><p>University-wide trends and early warning on recurring and urgent concerns.</p></div></div>
+        <div class="lp-role"><span class="ci">{{ icon('settings', 18) }}</span><div><h3>Administrators</h3><p>Run the weekly cycle and manage users, units, thresholds and the change log.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ privacy ============ -->
+  <section class="lp-section" id="privacy">
+    <div class="lp-wrap lp-privacy">
+      <div>
+        <p class="lp-kicker">Privacy</p>
+        <h2>Built around student anonymity</h2>
+        <p class="lp-lead-sm">PSU Pulse is designed in line with the Data Privacy Act of 2012 (Republic Act No. 10173). Students can speak freely because nothing they write is linked back to them.</p>
+        <a class="lp-link" href="{{ url_for('main.privacy') }}">Read the privacy notice →</a>
+      </div>
+      <ul class="lp-privacy-list">
+        <li>{{ icon('lock', 18) }}<div><b>No names on comments</b><span>Comments are stored without names or student numbers.</span></div></li>
+        <li>{{ icon('shield', 18) }}<div><b>Personal details removed</b><span>Names, phone numbers, emails and ID numbers are filtered out automatically.</span></div></li>
+        <li>{{ icon('users', 18) }}<div><b>Small groups stay hidden</b><span>Results appear only when at least 5 students have commented.</span></div></li>
+        <li>{{ icon('history', 18) }}<div><b>Access is controlled and logged</b><span>Staff see only their own units, and every report view is recorded.</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ call to action ============ -->
+  <section class="lp-cta-band">
+    <div class="lp-wrap lp-cta-inner">
+      <div>
+        <h2>Ready to see this week's pulse?</h2>
+        <p>Sign in with the account provided by your college or the system administrator.</p>
+      </div>
+      <a class="lp-btn lp-btn-gold" href="{{ url_for('auth.login') }}">Sign in</a>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <div class="lp-wrap lp-footer-inner">
+      <div class="lp-brand lp-brand-sm">
+        <img src="{{ url_for('static', filename='img/psu-logo.png') }}" alt="">
+        <span>PSU Pulse<small>Pangasinan State University</small></span>
+      </div>
+      <p>© {{ current_year }} PSU Pulse · Weekly student feedback and sentiment analysis</p>
+      <a href="{{ url_for('main.privacy') }}">Privacy notice</a>
+    </div>
+  </footer>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Underline the nav tab of the section currently on screen.
+  (function () {
+    const links = [...document.querySelectorAll('#lp-links a')];
+    const sections = links.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const setActive = (id) => links.forEach((a) => {
+      const on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    });
+    const update = () => {
+      const line = 120; // just below the sticky nav
+      let current = null;
+      sections.forEach((s) => { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) current = sections[sections.length - 1].id;
+      setActive(current);
+    };
+    links.forEach((a) => a.addEventListener('click', () => setActive(a.getAttribute('href').slice(1))));
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Feedback windows{% endblock %}
+{% block page_subtitle %}One window per week: scheduled → open → closed → processed{% endblock %}
+{% block content %}
+
+<form class="card" method="post" action="{{ url_for('admin.window_create') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card-head">{{ card_title("calendar", "Schedule a week") }}</div>
+  <div class="field-row">
+    <div class="field" style="max-width:120px"><label for="wk">Week no.</label><input id="wk" type="number" name="week_number" min="1" value="{{ next_week }}" required></div>
+    <div class="field"><label for="lbl">Label</label><input id="lbl" type="text" name="label" placeholder="Week {{ next_week }} — 1st Semester"></div>
+    <div class="field"><label for="sd">Start date</label><input id="sd" type="date" name="start_date" required></div>
+    <div class="field"><label for="ed">End date</label><input id="ed" type="date" name="end_date" required></div>
+    <button class="btn" type="submit">Schedule</button>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Week</th><th>Dates</th><th>Status</th><th class="num">Comments</th><th>Processed</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for w in windows %}
+      <tr>
+        <td><strong>{{ w.label }}</strong></td>
+        <td>{{ w|window_dates }}</td>
+        <td><span class="badge b-{{ w.status }}">{{ w.status|capitalize }}</span></td>
+        <td class="num">{{ counts.get(w.id, 0) }}</td>
+        <td class="small muted">{{ w.processed_at.strftime('%b %d, %H:%M') if w.processed_at else '—' }}</td>
+        <td>
+          <form method="post" class="actions" onsubmit="return confirm('Are you sure?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if w.status == 'scheduled' %}
+              <button class="btn btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='open') }}">Open</button>
+              <button class="btn btn-ghost btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='delete') }}">Delete</button>
+            {% elif w.status == 'open' %}
+              <button class="btn btn-ghost btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='close') }}">Close</button>
+              <button class="btn btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='process') }}">Close &amp; process</button>
+            {% elif w.status == 'closed' %}
+              <button class="btn btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='process') }}">Process</button>
+            {% else %}
+              {% if w.report %}<a class="btn btn-ghost btn-sm" href="{{ url_for('reports.view', report_id=w.report.id) }}">Report</a>{% endif %}
+              <button class="btn btn-ghost btn-sm" formaction="{{ url_for('admin.window_action', window_id=w.id, action='reprocess') }}" title="Re-run sentiment, aggregation, alerts and report (e.g. after a lexicon change)">Re-process</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">No windows yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

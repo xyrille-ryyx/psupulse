@@ -1,0 +1,74 @@
+{% macro sentiment_badge(label) -%}
+  <span class="badge b-{{ label }}">{{ label|capitalize }}</span>
+{%- endmacro %}
+
+{% macro sentiment_bar(a) -%}
+  <div class="sbar" role="img" aria-label="{{ a.positive_share|pct }} positive, {{ a.negative_share|pct }} negative, {{ a.neutral_share|pct }} neutral">
+    {% if a.positive_share %}<span class="p" style="width:{{ a.positive_share * 100 }}%"></span>{% endif %}
+    {% if a.negative_share %}<span class="n" style="width:{{ a.negative_share * 100 }}%"></span>{% endif %}
+    {% if a.neutral_share %}<span class="u" style="width:{{ a.neutral_share * 100 }}%"></span>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro delta(value) -%}
+  {% if value is none %}<span class="muted">—</span>
+  {% else %}<span class="{{ 'delta-up' if value > 0.005 else 'delta-down' if value < -0.005 else 'muted' }}">{{ value|signed_pts }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro stat_card(icon_name, label, value, sub='', tone='', value_tone='') -%}
+  <div class="card stat">
+    <span class="ci {{ tone }}">{{ icon(icon_name, 22) }}</span>
+    <div>
+      <div class="label">{{ label }}</div>
+      <div class="value {{ value_tone }}">{{ value }}</div>
+      {% if sub %}<div class="sub">{{ sub }}</div>{% endif %}
+    </div>
+  </div>
+{%- endmacro %}
+
+{% macro card_title(icon_name, title, tone='') -%}
+  <div class="card-title"><span class="ci {{ tone }}">{{ icon(icon_name, 18) }}</span><h2>{{ title }}</h2></div>
+{%- endmacro %}
+
+{# options: [(value, label)]; builds links that keep the other query args #}
+{% macro seg_links(endpoint, param, options, current) -%}
+  <div class="seg" role="group">
+    {% for value, label in options %}
+      {% set args = dict(request.args) %}{% set _ = args.update({param: value, 'page': 1}) %}
+      <a href="{{ url_for(endpoint, **args) }}" class="{{ 'on' if value == current }}" {% if value == current %}aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </div>
+{%- endmacro %}
+
+{# chips: [(param, name, shown value)] for every filter the user has set; each chip removes its own param #}
+{% macro filter_chips(endpoint, chips) -%}
+  {% if chips %}
+  <div class="chip-bar" role="region" aria-label="Active filters">
+    {% for param, name, value in chips %}
+      {% set args = dict(request.args) %}{% set _ = args.pop(param, None) %}{% set _ = args.pop('page', None) %}
+      <a class="filter-chip" href="{{ url_for(endpoint, **args) }}" title="Remove this filter" aria-label="Remove filter {{ name }}: {{ value }}">
+        <span>{{ name }}: <b>{{ value }}</b></span>{{ icon('x', 14) }}
+      </a>
+    {% endfor %}
+    <a class="chip-clear" href="{{ url_for(endpoint) }}">Clear all</a>
+  </div>
+  {% endif %}
+{%- endmacro %}
+
+{% macro csrf() -%}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro unit_filter(unit_choices, unit_id, can_overall) -%}
+  <div class="field">
+    <label for="unit">Unit</label>
+    <select id="unit" name="unit" onchange="this.form.submit()">
+      {% if can_overall %}<option value="all" {{ 'selected' if unit_id is none }}>University-wide</option>{% endif %}
+      {% for u in unit_choices %}
+        <option value="{{ u.id }}" {{ 'selected' if u.id == unit_id }}>
+          {{ ' ' if u.unit_type == 'department' else '  ' if u.unit_type == 'course' else '' }}{{ u.code }} — {{ u.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+{%- endmacro %}

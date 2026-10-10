@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sentiment_badge %}
+{% block page_title %}Analyzer lab{% endblock %}
+{% block page_subtitle %}Test the sentiment model and text mining, and evaluate them against labeled comments{% endblock %}
+
+{% macro metrics_card(r) %}
+  <div class="card">
+    <h2>{{ r.name }}</h2>
+    <div class="grid grid-4" style="margin-bottom:1rem">
+      <div class="stat"><div class="label">Accuracy</div><div class="value">{{ r.accuracy|pct(1) }}</div></div>
+      <div class="stat"><div class="label">Precision (macro)</div><div class="value">{{ r.precision_macro|pct(1) }}</div></div>
+      <div class="stat"><div class="label">Recall (macro)</div><div class="value">{{ r.recall_macro|pct(1) }}</div></div>
+      <div class="stat"><div class="label">F1 (macro)</div><div class="value">{{ r.f1_macro|pct(1) }}</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Class</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Support</th></tr></thead>
+        <tbody>{% for label in r.labels %}{% set c = r.per_class[label] %}
+          <tr><td>{{ label|capitalize }}</td><td class="num">{{ c.precision|pct(1) }}</td><td class="num">{{ c.recall|pct(1) }}</td><td class="num">{{ c.f1|pct(1) }}</td><td class="num">{{ c.support }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      <div class="table-wrap"><table class="cm">
+        <caption class="small muted" style="caption-side:top;text-align:left;margin-bottom:.3rem">Confusion matrix (rows = actual, columns = predicted)</caption>
+        <thead><tr><th></th>{% for l in r.labels %}<th>{{ l[:3]|capitalize }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for i in range(r.labels|length) %}<tr><th>{{ r.labels[i][:3]|capitalize }}</th>
+          {% for j in range(r.labels|length) %}<td class="{{ 'hit' if i == j }}">{{ r.confusion_matrix[i][j] }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    {% if r.errors %}
+      <details class="table-view"><summary>{{ r.errors|length }} misclassified comments</summary>
+        <div class="table-wrap"><table><thead><tr><th>Comment</th><th>Expected</th><th>Predicted</th></tr></thead>
+          <tbody>{% for e in r.errors %}<tr><td class="small">{{ e.text }}</td><td>{{ sentiment_badge(e.expected) }}</td><td>{{ sentiment_badge(e.predicted) }}</td></tr>{% endfor %}</tbody></table></div>
+      </details>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% block content %}
+
+<div class="notice" style="margin-bottom:1rem">
+  Active sentiment model: <strong>{{ engine.name }}</strong> <span class="muted small">({{ engine.version }})</span>
+</div>
+
+<div class="grid grid-2">
+  <form class="card" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="mode" value="test">
+    <h2>Try a comment</h2>
+    <div class="field"><textarea name="text" style="min-height:110px" placeholder="e.g. Napakagaling ni sir pero sobrang init sa room">{{ sample }}</textarea></div>
+    <button class="btn" type="submit">Analyze</button>
+  </form>
+
+  <form class="card" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="mode" value="evaluate">
+    <h2>Evaluate on labeled data</h2>
+    <p class="small muted">Upload a UTF-8 CSV with columns <code>text,label</code> (label = positive, negative or neutral). Add an <code>annotator_2</code> column to also get Cohen's kappa between annotators. A sample is in <code>database/sample_labeled_feedback.csv</code>.</p>
+    <div class="field"><input type="file" name="dataset" accept=".csv" required></div>
+    <button class="btn" type="submit">Run evaluation</button>
+  </form>
+</div>
+
+{% if result %}
+<div class="card" style="margin-top:1rem">
+  <h2>Result</h2>
+  <div class="grid grid-4" style="margin-bottom:1rem">
+    <div class="stat"><div class="label">Sentiment</div><div class="value" style="font-size:1.3rem">{{ sentiment_badge(result.label) }}</div><div class="sub">Word-count baseline says: {{ result.baseline }}</div></div>
+    <div class="stat"><div class="label">Compound score</div><div class="value">{{ '%+.3f'|format(result.score) }}</div><div class="sub">−1 (negative) to +1 (positive)</div></div>
+    <div class="stat"><div class="label">Confidence</div><div class="value">{{ result.confidence|pct }}</div></div>
+    <div class="stat"><div class="label">Topic</div><div class="value" style="font-size:1.2rem">{{ result.topic|topic_label }}</div>
+      <div class="sub">{% for t, n in result.topics.items() %}{{ t|topic_label }} ({{ n }}){{ ', ' if not loop.last }}{% endfor %}</div></div>
+  </div>
+  <h3>Sentiment words found</h3>
+  {% if result.matches %}
+    <table style="max-width:420px"><thead><tr><th>Term</th><th class="num">Adjusted valence</th></tr></thead>
+      <tbody>{% for term, v in result.matches %}<tr><td>{{ term }}</td><td class="num">{{ '%+.2f'|format(v) }}</td></tr>{% endfor %}</tbody></table>
+    <p class="hint">Valence after boosters, negation and contrast rules were applied.</p>
+  {% else %}<p class="muted small">No words from the sentiment lexicon were found.</p>{% endif %}
+  <h3 style="margin-top:1rem">Tokens</h3>
+  <div class="token-list">{% for t in result.tokens %}<span class="token">{{ t }}</span>{% endfor %}</div>
+  <h3 style="margin-top:1rem">Keywords</h3>
+  <div class="chips">{% for k in result.keywords %}<span class="chip">{{ k }}</span>{% else %}<span class="muted small">None</span>{% endfor %}</div>
+</div>
+{% endif %}
+
+{% if evaluation %}
+  <div class="notice" style="margin:1rem 0">
+    Evaluated on {{ evaluation.n }} labeled comments.
+    {% if evaluation.kappa is not none %} Inter-annotator agreement (Cohen's kappa): <strong>{{ '%.3f'|format(evaluation.kappa) }}</strong>.{% endif %}
+  </div>
+  <div class="card" style="margin-bottom:1rem">
+    <h2>Comparison</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Model</th><th class="num">Accuracy</th><th class="num">Precision (macro)</th><th class="num">Recall (macro)</th><th class="num">F1 (macro)</th></tr></thead>
+      <tbody>{% for r in evaluation.reports %}<tr><td>{{ r.name }}{% if loop.first %} <span class="badge plain">primary</span>{% endif %}</td>
+        <td class="num">{{ r.accuracy|pct(1) }}</td><td class="num">{{ r.precision_macro|pct(1) }}</td><td class="num">{{ r.recall_macro|pct(1) }}</td><td class="num">{{ r.f1_macro|pct(1) }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  {% for r in evaluation.reports %}{{ metrics_card(r) }}{% endfor %}
+{% endif %}
+{% endblock %}

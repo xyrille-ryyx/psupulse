@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Change log{% endblock %}
+{% block page_subtitle %}Governance record of analyzer, topic-category and setting changes (TOGAF Phase G/H){% endblock %}
+{% block content %}
+
+<form class="card" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card-head">{{ card_title("history", "Record a change") }}</div>
+  <div class="field-row">
+    <div class="field" style="max-width:220px"><label for="cat">Category</label>
+      <select id="cat" name="category">{% for c in categories %}<option value="{{ c }}">{{ c|replace('_', ' ')|capitalize }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="d">What changed</label><input id="d" name="description" type="text" placeholder="Added 'sablay' to negative lexicon" required></div>
+  </div>
+  <div class="field" style="margin-top:.75rem"><label for="r">Reason</label><input id="r" name="reason" type="text" placeholder="Common in week 5 comments but was unclassified"></div>
+  <button class="btn" type="submit">Record</button>
+</form>
+
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Category</th><th>Change</th><th>Reason</th><th>By</th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+      <tr><td class="small">{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td class="small">{{ e.category|replace('_', ' ')|capitalize }}</td>
+        <td>{{ e.description }}</td><td class="small muted">{{ e.reason or '—' }}</td><td class="small">{{ e.user.username if e.user else 'system' }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">No changes recorded yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

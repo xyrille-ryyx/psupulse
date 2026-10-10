@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block page_title %}Access log{% endblock %}
+{% block page_subtitle %}Sign-ins, report views and downloads, and comment views (latest 300){% endblock %}
+{% block content %}
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Target</th><th>IP</th></tr></thead>
+    <tbody>
+    {% for l in logs %}
+      <tr><td class="small">{{ l.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td><td>{{ l.user.username if l.user else '—' }}</td>
+        <td class="small">{{ l.action|replace('_', ' ') }}</td><td class="small muted">{{ l.target or '' }}</td><td class="small muted">{{ l.ip_address or '' }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">No activity yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

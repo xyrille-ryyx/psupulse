@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, card_title %}
+{% block page_title %}Administration{% endblock %}
+{% block page_subtitle %}Run the weekly feedback cycle and manage the system{% endblock %}
+{% block content %}
+
+<div class="grid grid-4">
+  {{ stat_card('users', 'Users', stats.users, stats.students ~ ' students') }}
+  {{ stat_card('building', 'Units', stats.units, 'Colleges, departments, courses') }}
+  {{ stat_card('comments', 'Comments collected', stats.feedback, 'Across ' ~ stats.windows ~ ' weeks') }}
+  {{ stat_card('bell', 'Active alerts', stats.open_alerts, stats.reports ~ ' reports generated', tone='gold', value_tone='gold') }}
+</div>
+
+<div class="card" style="margin-top:1.25rem">
+  <div class="card-head">{{ card_title('calendar', 'This week') }}</div>
+  <div class="split">
+    <div class="panel">
+      {% if open_window %}
+        <p><strong>{{ open_window.label }}</strong> ({{ open_window|window_dates }}) is open.</p>
+        <p class="muted">{{ pending }} comment{{ 's' if pending != 1 }} received so far.</p>
+        <form method="post" action="{{ url_for('admin.window_action', window_id=open_window.id, action='process') }}" class="actions">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="pill-btn primary" onclick="return confirm('Close {{ open_window.label }}, classify all comments, and generate the weekly report?')">{{ icon('check', 16) }} Close window &amp; generate report</button>
+          <a class="pill-btn" href="{{ url_for('admin.windows') }}">Manage windows</a>
+        </form>
+      {% else %}
+        <p class="muted">No feedback window is open. Schedule and open the next week so students can submit feedback.</p>
+        <a class="pill-btn primary" href="{{ url_for('admin.windows') }}">{{ icon('calendar', 16) }} Manage windows</a>
+      {% endif %}
+    </div>
+    <div>
+      <p class="side-title">Weekly process</p>
+      <ol class="muted small" style="margin:0;padding-left:1.1rem;display:grid;gap:.35rem">
+        <li>Open the weekly feedback window.</li>
+        <li>Students submit anonymous comments.</li>
+        <li>Close and process the window: each comment's sentiment is classified and its topic grouped.</li>
+        <li>Results are combined by week and unit, alerts are raised, and the weekly report is generated.</li>
+        <li>Staff review trends and flagged concerns, then record the action taken on each alert.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

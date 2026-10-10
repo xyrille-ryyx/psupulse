@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card_title %}
+{% block page_title %}Weekly reports{% endblock %}
+{% block page_subtitle %}Generated automatically when a feedback window is processed{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-head">{{ card_title('reports', 'All reports') }}<span class="muted small">{{ reports|length }} report{{ 's' if reports|length != 1 }}</span></div>
+  {% if reports %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Week</th><th>Dates</th><th class="num">Comments</th><th>Generated</th><th></th></tr></thead>
+    <tbody>
+    {% for r in reports %}
+      {% set s = r.summary %}
+      <tr>
+        <td><a href="{{ url_for('reports.view', report_id=r.id) }}">{{ r.window.label }}</a></td>
+        <td>{{ r.window|window_dates }}</td>
+        <td class="num">{{ s.overall.total if s.overall else '—' }}</td>
+        <td class="small muted">{{ r.generated_at.strftime('%b %d, %Y %H:%M') }}</td>
+        <td class="actions" style="justify-content:flex-end">
+          <a class="pill-btn" href="{{ url_for('reports.view', report_id=r.id) }}">View</a>
+          <a class="pill-btn" href="{{ url_for('reports.export_csv', report_id=r.id) }}">{{ icon('download', 16) }} CSV</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+    <div class="empty">No reports yet. Reports are created when an administrator processes a closed feedback window.</div>
+  {% endif %}
+</div>
+<p class="footnote">Reports are frozen snapshots, so a report doesn't change after it's shared. You only see the units you're allowed to access.</p>
+{% endblock %}

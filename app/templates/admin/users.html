@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_macros.html" import filter_chips with context %}
+{% block page_title %}Users{% endblock %}
+{% block page_subtitle %}Accounts, roles and the units each person can access{% endblock %}
+{% block content %}
+
+<details class="card">
+  <summary><strong>Add a user</strong></summary>
+  <form method="post" action="{{ url_for('admin.user_create') }}" style="margin-top:1rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid grid-2">
+      <div>
+        <div class="field"><label for="u">Username</label><input id="u" name="username" type="text" required></div>
+        <div class="field"><label for="fn">Full name</label><input id="fn" name="full_name" type="text" required></div>
+        <div class="field"><label for="em">Email (optional)</label><input id="em" name="email" type="email"></div>
+        <div class="field"><label for="pw">Initial password</label><input id="pw" name="password" type="password" minlength="8" required></div>
+        <div class="field"><label for="ro">Role</label>
+          <select id="ro" name="role">{% for k, v in role_labels.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field">
+        <label for="un">Units</label>
+        <select id="un" name="unit_ids" multiple size="12">
+          {% for u in units %}<option value="{{ u.id }}">{{ u.code }} — {{ u.name }} ({{ u.unit_type }})</option>{% endfor %}
+        </select>
+        <div class="hint">Students: enrolled courses. Faculty: courses they handle. Department heads: their department. Hold Ctrl to select several.</div>
+      </div>
+    </div>
+    <button class="btn" type="submit">Create user</button>
+  </form>
+</details>
+
+<form class="filters" method="get" style="margin-top:1rem">
+  <div class="field"><label for="role">Role</label>
+    <select id="role" name="role" onchange="this.form.submit()">
+      <option value="">All roles</option>
+      {% for k, v in role_labels.items() %}<option value="{{ k }}" {{ 'selected' if k == role }}>{{ v }}</option>{% endfor %}
+    </select></div>
+{% set chips = [] %}
+{% if role %}{% set _ = chips.append(('role', 'Role', role_labels.get(role, role))) %}{% endif %}
+{{ filter_chips('admin.users', chips) }}
+</form>
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Units</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td><a href="{{ url_for('admin.user_edit', user_id=u.id) }}">{{ u.username }}</a></td>
+        <td>{{ u.full_name }}</td>
+        <td class="small">{{ u.role_label }}</td>
+        <td class="small">{{ u.units|map(attribute='code')|join(', ') or '—' }}</td>
+        <td><span class="badge {{ 'b-resolved' if u.active else 'b-open' }}">{{ 'Active' if u.active else 'Disabled' }}</span></td>
+        <td class="small muted">{{ u.last_login.strftime('%b %d, %H:%M') if u.last_login else 'Never' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.user_toggle', user_id=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm">{{ 'Disable' if u.active else 'Enable' }}</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

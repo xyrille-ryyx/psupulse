@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block page_title %}Server error{% endblock %}
+{% macro body() %}<div class="card empty"><h1>Something went wrong</h1><p>Please try again. If it keeps happening, contact the system administrator.</p><a class="btn" href="{{ url_for('main.index') }}">Go to home</a></div>{% endmacro %}
+{% block content %}{{ body() }}{% endblock %}
+{% block auth_content %}{{ body() }}{% endblock %}

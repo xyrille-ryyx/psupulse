@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sentiment_bar, delta, stat_card, card_title %}
+{% block page_title %}Weekly report: {{ s.window.label }}{% endblock %}
+{% block page_subtitle %}{{ report.window|window_dates }} · Generated {{ report.generated_at.strftime('%b %d, %Y %H:%M') }}{% if report.generated_by %} by {{ report.generated_by.full_name }}{% endif %}{% endblock %}
+{% block header_actions %}
+  <button class="pill-btn no-print" onclick="window.print()">{{ icon('printer', 16) }} Print / PDF</button>
+  {% if s.units %}<a class="pill-btn primary no-print" href="{{ url_for('reports.export_csv', report_id=report.id) }}">{{ icon('download', 16) }} CSV</a>{% endif %}
+{% endblock %}
+{% block content %}
+
+{% if show_overall and s.overall %}
+  {% set o = s.overall %}
+  {% if o.suppressed %}
+    <div class="notice">Only {{ o.total }} comments this week (below the minimum of {{ s.min_group_size }}).</div>
+  {% else %}
+    <div class="grid grid-4">
+      {{ stat_card('comments', 'Comments', o.total) }}
+      {{ stat_card('smile', 'Positive', o.positive_share|pct, o.positive ~ ' comments', value_tone='blue') }}
+      {{ stat_card('frown', 'Negative', o.negative_share|pct, o.negative ~ ' comments · ' ~ (o.delta_negative_share|signed_pts) ~ ' vs last week', tone='gold', value_tone='gold') }}
+      {{ stat_card('meh', 'Neutral', o.neutral_share|pct, o.neutral ~ ' comments', tone='gray') }}
+    </div>
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-head">{{ card_title('trend', 'Highlights') }}</div>
+      <div class="split">
+        <div>
+          <ul style="margin:0 0 1rem;padding-left:1.1rem">{% for h in s.highlights %}<li style="margin-bottom:.35rem">{{ h }}</li>{% endfor %}</ul>
+          <p class="side-title">Recurring keywords</p>
+          <div class="chips">{% for term, n in o.keywords %}<span class="chip">{{ term }}<b>{{ n }}</b></span>{% endfor %}</div>
+        </div>
+        <div>
+          <p class="side-title">Topics</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Topic</th><th class="num">Total</th><th class="num">Negative</th><th class="num">Positive</th></tr></thead>
+            <tbody>{% for t in o.topics %}<tr><td>{{ t.topic|topic_label }}</td><td class="num">{{ t.total }}</td><td class="num">{{ t.negative }}</td><td class="num">{{ t.positive }}</td></tr>{% endfor %}</tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+
+<div class="card">
+  <div class="card-head">{{ card_title('layers', 'By unit') }}</div>
+  {% if s.units %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Unit</th><th>Type</th><th class="num">Comments</th><th>Sentiment</th><th class="num">Pos.</th><th class="num">Neg.</th><th class="num">Neu.</th><th class="num">Change (neg.)</th><th>Top topics</th></tr></thead>
+    <tbody>
+    {% for r in s.units %}
+      <tr>
+        <td><strong>{{ r.code }}</strong> <span class="muted small">{{ r.name }}</span></td>
+        <td class="small">{{ r.unit_type|capitalize }}</td>
+        <td class="num">{{ r.total }}</td>
+        {% if r.suppressed %}
+          <td colspan="6" class="muted small">Hidden: fewer than {{ s.min_group_size }} comments</td>
+        {% else %}
+          <td>{{ sentiment_bar(r) }}</td>
+          <td class="num">{{ r.positive_share|pct }}</td>
+          <td class="num">{{ r.negative_share|pct }}</td>
+          <td class="num">{{ r.neutral_share|pct }}</td>
+          <td class="num">{{ delta(r.delta_negative_share) }}</td>
+          <td class="small">{% for t in r.topics[:3] %}{{ t.topic|topic_label }}{{ ', ' if not loop.last }}{% endfor %}</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+    <p class="muted">None of your units have results in this report.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-head">{{ card_title('bell', 'Alerts raised this week', 'gold') }}</div>
+  {% if s.alerts %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Severity</th><th>Unit</th><th>Type</th><th>Details</th></tr></thead>
+      <tbody>{% for a in s.alerts %}<tr><td><span class="badge b-{{ a.severity }}">{{ a.severity|capitalize }}</span></td><td>{{ a.unit_code }}</td><td class="small">{{ a.type }}</td><td class="small">{{ a.message }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  {% else %}<p class="muted">No alerts.</p>{% endif %}
+</div>
+
+<p class="footnote">Sentiment is measured automatically{% if s.analyzer %} by {{ s.analyzer }}{% endif %}. Results for groups with fewer than {{ s.min_group_size }} comments are withheld to protect student anonymity.</p>
+{% endblock %}

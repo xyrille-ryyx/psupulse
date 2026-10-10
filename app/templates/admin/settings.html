@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Privacy and alert thresholds. Every change is recorded in the change log{% endblock %}
+{% block content %}
+<form class="card" method="post" style="max-width:720px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% for s in settings %}
+    <div class="field">
+      <label for="{{ s.key }}">{{ s.key|replace('_', ' ')|capitalize }}</label>
+      <input id="{{ s.key }}" name="{{ s.key }}" type="number" step="{{ '1' if s.value is integer else '0.01' }}" min="0" value="{{ s.value }}">
+      <div class="hint">{{ s.description }}</div>
+    </div>
+  {% endfor %}
+  <div class="field"><label for="reason">Reason for change</label><input id="reason" name="reason" type="text" placeholder="e.g. Approved by Student Affairs on …"></div>
+  <button class="btn" type="submit">Save settings</button>
+  <p class="hint" style="margin-top:.75rem">New thresholds apply the next time a window is processed. Re-process a window to apply them to past weeks.</p>
+</form>
+{% endblock %}

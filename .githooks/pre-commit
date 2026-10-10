@@ -1,0 +1,21 @@
+#!/bin/sh
+# Enable with:  git config core.hooksPath psupulse/.githooks   (or .githooks inside psupulse/)
+# Blocks committing secrets and Python files that do not compile.
+
+if git diff --cached --name-only | grep -E '(^|/)\.env$' >/dev/null; then
+  echo "pre-commit: refusing to commit a .env file (it contains secrets)." >&2
+  exit 1
+fi
+
+PY_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$')
+if [ -n "$PY_FILES" ]; then
+  PYTHON=python
+  [ -x ".venv/Scripts/python.exe" ] && PYTHON=".venv/Scripts/python.exe"
+  [ -x ".venv/bin/python" ] && PYTHON=".venv/bin/python"
+  # shellcheck disable=SC2086
+  if ! $PYTHON -m py_compile $PY_FILES; then
+    echo "pre-commit: fix the syntax errors above before committing." >&2
+    exit 1
+  fi
+fi
+exit 0
