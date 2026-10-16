@@ -13,6 +13,8 @@ class Feedback(db.Model):
     unit_id = db.Column(
         db.Integer, db.ForeignKey("units.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    # Office feedback only: what the student did there (e.g. "Paying tuition"), PII-filtered.
+    transaction_type = db.Column(db.String(100))
     text = db.Column(db.Text, nullable=False)  # already passed through the PII filter
     pii_redacted = db.Column(db.Boolean, default=False, nullable=False)
     submitted_on = db.Column(db.Date, nullable=False)  # date only, to limit re-identification

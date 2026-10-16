@@ -2,6 +2,15 @@
 {% from "_macros.html" import card_title %}
 {% block page_title %}Weekly feedback{% endblock %}
 {% block page_subtitle %}{% if window %}{{ window.label }} · {{ window|window_dates }} · Your comments are anonymous{% else %}Share how your week went. Your comments are anonymous{% endif %}{% endblock %}
+{% macro unit_option(u, kind) %}
+  <label class="course-option {{ 'done' if status[u.id] }}">
+    <span>
+      <input type="radio" name="unit_id" value="{{ u.id }}" data-kind="{{ kind }}" {{ 'disabled' if status[u.id] }} required>
+      {{ u.name if kind == 'office' else u.code ~ ' — ' ~ u.name }}
+    </span>
+    {% if status[u.id] %}<span class="badge b-resolved">Sent this week</span>{% endif %}
+  </label>
+{% endmacro %}
 {% block content %}
 
 <div class="grid grid-3">
@@ -11,9 +20,9 @@
         <h2>Feedback is closed for now</h2>
         <p>The next weekly feedback window hasn't opened yet. Please check back soon.</p>
       </div>
-    {% elif not courses %}
+    {% elif not courses and not offices %}
       <div class="card empty">
-        <h2>No enrolled courses found</h2>
+        <h2>No courses or offices found</h2>
         <p>Please ask the system administrator to link your courses to your account.</p>
       </div>
     {% else %}
@@ -21,18 +30,27 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="card-head">{{ card_title('pencil', "Send this week's feedback") }}</div>
         <div class="field">
-          <label>Which course is this about?</label>
-          <div class="course-list">
-            {% for c in courses %}
-              <label class="course-option {{ 'done' if status[c.id] }}">
-                <span>
-                  <input type="radio" name="unit_id" value="{{ c.id }}" {{ 'disabled' if status[c.id] }} required>
-                  {{ c.code }} — {{ c.name }}
-                </span>
-                {% if status[c.id] %}<span class="badge b-resolved">Sent this week</span>{% endif %}
-              </label>
-            {% endfor %}
-          </div>
+          <label>What is this feedback about?</label>
+          {% if courses %}
+            <div class="option-group">A course you're enrolled in</div>
+            <div class="course-list">
+              {% for c in courses %}{{ unit_option(c, 'course') }}{% endfor %}
+            </div>
+          {% endif %}
+          {% if offices %}
+            <div class="option-group">A transaction at a university office</div>
+            <div class="course-list">
+              {% for o in offices %}{{ unit_option(o, 'office') }}{% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="field" id="transaction-field" hidden>
+          <label for="transaction_type">What did you do there? <span class="muted">(optional)</span></label>
+          <input id="transaction_type" name="transaction_type" type="text" maxlength="100" list="transaction-list"
+            placeholder="e.g. Paying tuition, requesting a TOR, clearance signing">
+          <datalist id="transaction-list">
+            {% for t in transactions %}<option value="{{ t }}">{% endfor %}
+          </datalist>
         </div>
         <div class="field">
           <label for="comment">Your comment</label>
@@ -69,5 +87,17 @@
 <script>
   const box = document.getElementById('comment'), count = document.getElementById('count');
   if (box) box.addEventListener('input', () => { count.textContent = box.value.length; });
+
+  // Office feedback asks about the transaction; course feedback asks about the week.
+  const txField = document.getElementById('transaction-field');
+  const prompts = {
+    course: 'How was this week? What worked well, and what should improve? English, Filipino, or Taglish are all fine.',
+    office: 'How was your transaction? Think of waiting time, how staff treated you, and whether it got done. English, Filipino, or Taglish are all fine.',
+  };
+  document.querySelectorAll('input[name="unit_id"]').forEach((radio) => radio.addEventListener('change', () => {
+    const kind = radio.dataset.kind;
+    txField.hidden = kind !== 'office';
+    box.placeholder = prompts[kind];
+  }));
 </script>
 {% endblock %}

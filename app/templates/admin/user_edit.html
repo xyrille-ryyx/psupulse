@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import unit_picker %}
 {% block page_title %}Edit {{ user.username }}{% endblock %}
 {% block page_subtitle %}{{ user.role_label }}{% endblock %}
 {% block content %}
@@ -16,11 +17,9 @@
       <div class="field"><label for="pw">Reset password</label><input id="pw" name="password" type="password" minlength="8" placeholder="Leave blank to keep the current password"></div>
     </div>
     <div class="field">
-      <label for="un">Units</label>
-      <select id="un" name="unit_ids" multiple size="14">
-        {% for u in units %}<option value="{{ u.id }}" {{ 'selected' if u.id in mine }}>{{ u.code }} — {{ u.name }} ({{ u.unit_type }})</option>{% endfor %}
-      </select>
-      <div class="hint">Hold Ctrl to select several.</div>
+      <label>What can they see?</label>
+      {{ unit_picker(unit_roots, offices, mine) }}
+      <div class="hint">Tick the courses a student takes or a teacher handles. For a department head, tick their department, or the office they run.</div>
     </div>
   </div>
   <div class="actions"><button class="btn" type="submit">Save changes</button><a class="btn btn-ghost" href="{{ url_for('admin.users') }}">Cancel</a></div>

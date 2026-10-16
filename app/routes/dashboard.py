@@ -20,14 +20,18 @@ def _processed_windows():
     return FeedbackWindow.query.filter_by(status="processed").order_by(FeedbackWindow.start_date.desc()).all()
 
 
+UNIT_RANK = {"college": 0, "department": 1, "office": 2, "course": 3}
+
+
 def _default_unit():
-    """University-wide for admins/student affairs; faculty land on their first course, heads on their department."""
+    """University-wide for admins/student affairs; faculty land on their first course, heads on their
+    department (or office)."""
     if can_see_overall(current_user):
         return None, None
     units = visible_units(current_user)
     if not units:
         abort(403)
-    first = min(units, key=lambda u: ("college", "department", "course").index(u.unit_type)) \
+    first = min(units, key=lambda u: UNIT_RANK.get(u.unit_type, 9)) \
         if current_user.role == "dept_head" else units[0]
     return first.id, first
 
@@ -130,9 +134,9 @@ def index():
             trend[key].append(round(getattr(a, f"{key}_share") * 100, 1) if ok else None)
             trend[f"{key}_n"].append(getattr(a, key) if ok else None)
 
-    # Breakdown of the child units (or colleges, for the university-wide view).
+    # Breakdown of the child units (or colleges and offices, for the university-wide view).
     child_ids = [c.id for c in unit.children] if unit else \
-        [u.id for u in Unit.query.filter_by(unit_type="college").all()]
+        [u.id for u in Unit.query.filter(Unit.unit_type.in_(("college", "office"))).all()]
     allowed = visible_unit_ids(current_user)
     if allowed is not None:
         child_ids = [c for c in child_ids if c in allowed]

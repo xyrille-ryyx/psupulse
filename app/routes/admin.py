@@ -50,6 +50,14 @@ def _assign_units(user, unit_ids):
     user.units = Unit.query.filter(Unit.id.in_(unit_ids or [-1])).all()
 
 
+def _unit_tree():
+    """Top-level academic units (each with its children) and the standalone offices, for the unit picker."""
+    roots = (Unit.query.filter(Unit.parent_id.is_(None), Unit.unit_type != "office")
+             .order_by(Unit.unit_type != "college", Unit.code).all())
+    offices = Unit.query.filter_by(unit_type="office").order_by(Unit.name).all()
+    return {"unit_roots": roots, "offices": offices}
+
+
 @bp.route("/users")
 def users():
     role = request.args.get("role", "")
@@ -57,7 +65,7 @@ def users():
     if role in User.ROLES:
         query = query.filter_by(role=role)
     return render_template("admin/users.html", users=query.order_by(User.role, User.username).all(),
-                           role=role, units=Unit.query.order_by(Unit.code).all())
+                           role=role, **_unit_tree())
 
 
 @bp.route("/users/new", methods=["POST"])
@@ -99,7 +107,7 @@ def user_edit(user_id):
         db.session.commit()
         flash("User updated.", "success")
         return redirect(url_for("admin.users"))
-    return render_template("admin/user_edit.html", user=user, units=Unit.query.order_by(Unit.code).all())
+    return render_template("admin/user_edit.html", user=user, **_unit_tree())
 
 
 @bp.route("/users/<int:user_id>/toggle", methods=["POST"])
@@ -118,9 +126,11 @@ def user_toggle(user_id):
 @bp.route("/units")
 def units():
     colleges = Unit.query.filter_by(unit_type="college").order_by(Unit.code).all()
-    orphans = Unit.query.filter(Unit.unit_type != "college", Unit.parent_id.is_(None)).all()
-    return render_template("admin/units.html", colleges=colleges, orphans=orphans,
-                           parents=Unit.query.filter(Unit.unit_type != "course").order_by(Unit.code).all())
+    offices = Unit.query.filter_by(unit_type="office").order_by(Unit.name).all()
+    orphans = Unit.query.filter(Unit.unit_type.notin_(("college", "office")), Unit.parent_id.is_(None)).all()
+    parents = Unit.query.filter(Unit.unit_type.in_(("college", "department"))).order_by(Unit.code).all()
+    return render_template("admin/units.html", colleges=colleges, offices=offices, orphans=orphans,
+                           parents=parents)
 
 
 @bp.route("/units/new", methods=["POST"])
@@ -129,14 +139,15 @@ def unit_create():
     code, name, unit_type = f.get("code", "").strip().upper(), f.get("name", "").strip(), f.get("unit_type")
     parent_id = f.get("parent_id", type=int)
     parent = db.session.get(Unit, parent_id) if parent_id else None
-    expected_parent = {"college": None, "department": "college", "course": "department"}.get(unit_type, "x")
+    expected_parent = {"college": None, "department": "college", "course": "department",
+                       "office": None}.get(unit_type, "x")
     if not code or not name or unit_type not in Unit.TYPES:
         flash("Code, name and type are required.", "error")
     elif Unit.query.filter_by(code=code).first():
         flash(f"Unit code '{code}' already exists.", "error")
     elif (parent.unit_type if parent else None) != expected_parent:
         flash(f"A {unit_type} must be placed under a {expected_parent}." if expected_parent
-              else "Colleges cannot have a parent unit.", "error")
+              else f"{unit_type.title()}s cannot have a parent unit.", "error")
     else:
         db.session.add(Unit(code=code, name=name, unit_type=unit_type, parent=parent))
         log_change("units", f"Added {unit_type} {code} — {name}")

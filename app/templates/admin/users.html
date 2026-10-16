@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import filter_chips with context %}
+{% from "_macros.html" import filter_chips, unit_picker with context %}
 {% block page_title %}Users{% endblock %}
 {% block page_subtitle %}Accounts, roles and the units each person can access{% endblock %}
 {% block content %}
@@ -18,11 +18,9 @@
           <select id="ro" name="role">{% for k, v in role_labels.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
       </div>
       <div class="field">
-        <label for="un">Units</label>
-        <select id="un" name="unit_ids" multiple size="12">
-          {% for u in units %}<option value="{{ u.id }}">{{ u.code }} — {{ u.name }} ({{ u.unit_type }})</option>{% endfor %}
-        </select>
-        <div class="hint">Students: enrolled courses. Faculty: courses they handle. Department heads: their department. Hold Ctrl to select several.</div>
+        <label>What can they see?</label>
+        {{ unit_picker(unit_roots, offices) }}
+        <div class="hint">Tick the courses a student takes or a teacher handles. For a department head, tick their department, or the office they run.</div>
       </div>
     </div>
     <button class="btn" type="submit">Create user</button>

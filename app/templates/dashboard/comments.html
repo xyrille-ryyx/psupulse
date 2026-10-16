@@ -50,6 +50,7 @@
           {{ sentiment_badge(fb.sentiment.label) }}
           <span class="badge plain">{{ fb.sentiment.topic|topic_label }}</span>
           <span class="badge plain">{{ fb.unit.code }}</span>
+          {% if fb.transaction_type %}<span class="badge plain">{{ fb.transaction_type }}</span>{% endif %}
           {% if not window %}<span class="badge plain">{{ fb.window.label }}</span>{% endif %}
           <span class="num">score {{ '%+.2f'|format(fb.sentiment.score) }}</span>
           {% if fb.pii_redacted %}<span class="badge plain">personal details removed</span>{% endif %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import card_title %}
 {% block page_title %}Units{% endblock %}
-{% block page_subtitle %}Colleges, departments and courses used to group feedback{% endblock %}
+{% block page_subtitle %}Colleges, departments, courses and offices used to group feedback{% endblock %}
 {% macro tree(unit, depth=0) %}
   <tr>
     <td style="padding-left:{{ 0.6 + depth * 1.5 }}rem"><strong>{{ unit.code }}</strong></td>
@@ -20,9 +20,9 @@
     <div class="field" style="max-width:150px"><label for="c">Code</label><input id="c" name="code" type="text" placeholder="IT 311" required></div>
     <div class="field"><label for="n">Name</label><input id="n" name="name" type="text" required></div>
     <div class="field" style="max-width:170px"><label for="t">Type</label>
-      <select id="t" name="unit_type"><option value="course">Course</option><option value="department">Department</option><option value="college">College</option></select></div>
+      <select id="t" name="unit_type"><option value="course">Course</option><option value="department">Department</option><option value="college">College</option><option value="office">Office</option></select></div>
     <div class="field"><label for="p">Parent</label>
-      <select id="p" name="parent_id"><option value="">— none (colleges) —</option>
+      <select id="p" name="parent_id"><option value="">— none (colleges, offices) —</option>
         {% for u in parents %}<option value="{{ u.id }}">{{ u.code }} — {{ u.name }}</option>{% endfor %}</select></div>
     <button class="btn" type="submit">Add</button>
   </div>
@@ -34,6 +34,7 @@
     <tbody>
       {% for college in colleges %}{{ tree(college) }}{% endfor %}
       {% for u in orphans %}{{ tree(u) }}{% endfor %}
+      {% for u in offices %}{{ tree(u) }}{% endfor %}
     </tbody>
   </table></div>
 </div>

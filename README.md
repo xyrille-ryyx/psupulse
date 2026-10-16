@@ -29,8 +29,9 @@ Demo logins (after seeding): `admin / admin12345`, and `osa.reyes`, `head.it`, `
 
 ## Weekly flow (Section 4.2)
 
-Admin opens the week's window → students submit anonymous comments → admin clicks **Close & process**
-(or runs `scripts\generate_weekly_report.py`) → comments are classified and grouped by topic →
+Admin opens the week's window → students submit anonymous comments on their courses, or on a
+transaction at a university office (Cashier, Registrar, ...; offices are managed under Admin → Units) → admin clicks **Close & process**
+on the Admin overview → comments are classified and grouped by topic →
 results are aggregated by week and unit → alerts are raised → the weekly report is generated →
 staff review trends and record the action taken on each alert.
 
@@ -55,13 +56,10 @@ staff review trends and record the action taken on each alert.
 |---|---|
 | `init_db.py [--reset]` | Create the MySQL database, tables and the first admin |
 | `seed_data.py [--reset]` | Demo units, users, 6 weeks of synthetic comments |
-| `generate_weekly_report.py` | Close + process the current window (good for Task Scheduler) |
-| `evaluate_model.py file.csv [--errors]` | Accuracy / precision / recall / F1 / confusion matrix: lexicon model vs word-count baseline |
-| `export_schema.py` | Regenerate `database/psupulse.sql` after changing the models |
-| `smoke_test.py` | End-to-end check of every role and page (run after seeding) |
+| `export_schema.py` | Regenerate `database/psupulse.sql` after changing the models (new columns on existing tables also go in `app/models/upgrades.py`) |
 
 ## Evaluation (Chapter 5.2)
 
-Label at least 300 real comments in a CSV with columns `text,label,annotator_2`, then run
-`python scripts\evaluate_model.py yourfile.csv --errors`, or upload the file in **Admin → Analyzer lab**.
+Label at least 300 real comments in a CSV with columns `text,label,annotator_2`, then upload the file
+in **Admin → Analyzer lab** to get accuracy, precision, recall, F1 and the confusion matrix.
 `database/sample_labeled_feedback.csv` is a small sample for testing only. Don't report results from it.

@@ -6,7 +6,7 @@
 
 <div class="grid grid-4">
   {{ stat_card('users', 'Users', stats.users, stats.students ~ ' students') }}
-  {{ stat_card('building', 'Units', stats.units, 'Colleges, departments, courses') }}
+  {{ stat_card('building', 'Units', stats.units, 'Colleges, departments, courses, offices') }}
   {{ stat_card('comments', 'Comments collected', stats.feedback, 'Across ' ~ stats.windows ~ ' weeks') }}
   {{ stat_card('bell', 'Active alerts', stats.open_alerts, stats.reports ~ ' reports generated', tone='gold', value_tone='gold') }}
 </div>

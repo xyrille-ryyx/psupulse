@@ -103,8 +103,8 @@ def build_aggregates(window):
 # --------------------------------------------------------------------------- alerts
 def evaluate_alerts(window):
     """Flag sharp rises in negative sentiment, high negativity, recurring and safety topics.
-    Sentiment alerts are raised for courses and the university as a whole; topic alerts for
-    courses only. Department heads see the course alerts inside their department."""
+    Sentiment alerts are raised for courses, offices and the university as a whole; topic alerts
+    for courses and offices only. Department heads see the course alerts inside their department."""
     # Re-processing replaces untouched auto alerts but keeps ones staff already acted on.
     Alert.query.filter_by(window_id=window.id, status="open").filter(Alert.action_notes.is_(None)).delete()
     db.session.flush()
@@ -121,7 +121,7 @@ def evaluate_alerts(window):
     aggregates = (
         WeeklyAggregate.query.filter_by(window_id=window.id)
         .outerjoin(Unit, WeeklyAggregate.unit_id == Unit.id)
-        .filter(db.or_(WeeklyAggregate.unit_id.is_(None), Unit.unit_type == "course"))
+        .filter(db.or_(WeeklyAggregate.unit_id.is_(None), Unit.unit_type.in_(("course", "office"))))
         .all()
     )
     created = []
@@ -149,7 +149,7 @@ def evaluate_alerts(window):
                         agg.negative_share)
 
         if agg.unit_id is None:
-            continue  # topic alerts are course-level; university-wide counts always "recur"
+            continue  # topic alerts are course/office-level; university-wide counts always "recur"
         last_week = prev_topics.get(agg.unit_id, {})
         for t in agg.topics:
             if t["topic"] == "safety" and t["negative"] > 0:

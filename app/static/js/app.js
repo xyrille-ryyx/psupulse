@@ -98,6 +98,91 @@
     });
   }
 
+  // Tooltips for the collapsed rail. One fixed element, so the scrolling link list can't clip it.
+  function railTooltips() {
+    const links = document.querySelectorAll('.rail a[data-tip]');
+    if (!links.length) return;
+    const tip = document.createElement('div');
+    tip.className = 'rail-tip';
+    tip.setAttribute('role', 'tooltip');
+    tip.hidden = true;
+    document.body.appendChild(tip);
+    const hide = () => { tip.hidden = true; };
+    const show = (e) => {
+      if (document.documentElement.classList.contains('rail-open')) return;
+      const box = e.currentTarget.getBoundingClientRect();
+      tip.textContent = e.currentTarget.dataset.tip;
+      tip.style.left = `${box.right + 12}px`;
+      tip.style.top = `${box.top + box.height / 2}px`;
+      tip.hidden = false;
+    };
+    links.forEach((a) => {
+      a.addEventListener('mouseenter', show);
+      a.addEventListener('focus', show);
+      a.addEventListener('mouseleave', hide);
+      a.addEventListener('blur', hide);
+    });
+    const nav = document.querySelector('.rail-nav');
+    if (nav) nav.addEventListener('scroll', hide);
+  }
+
+  // Unit picker: live "N selected" count and a search that keeps matches' parent units visible.
+  function unitPickers() {
+    document.querySelectorAll('[data-unit-picker]').forEach((picker) => {
+      const boxes = picker.querySelectorAll('input[type=checkbox]');
+      const count = picker.querySelector('[data-unit-count]');
+      const search = picker.querySelector('[data-unit-search]');
+      const empty = picker.querySelector('.unit-empty');
+      const groups = picker.querySelectorAll('.unit-group');
+      const updateCount = () => {
+        const n = [...boxes].filter((b) => b.checked).length;
+        count.textContent = n ? `${n} selected` : 'None selected';
+      };
+      const filter = () => {
+        const q = search.value.trim().toLowerCase();
+        // A node shows when it, a parent, or a child matches.
+        const matches = (node) => node.querySelector(':scope > .unit-row').textContent.toLowerCase().includes(q);
+        let any = false;
+        picker.querySelectorAll('.unit-node').forEach((node) => {
+          let show = !q || matches(node);
+          for (let up = node.parentElement.closest('.unit-node'); !show && up; up = up.parentElement.closest('.unit-node')) {
+            show = matches(up);
+          }
+          if (!show) show = [...node.querySelectorAll('.unit-node')].some(matches);
+          node.hidden = !show;
+          any = any || show;
+        });
+        groups.forEach((g) => { g.hidden = ![...g.nextElementSibling.children].some((n) => !n.hidden); });
+        empty.hidden = any;
+      };
+      // Ticking a college or department ticks everything under it; unticking one unit unticks
+      // its parents. A parent with only some units ticked shows the "partly selected" dash.
+      const boxOf = (node) => node.querySelector(':scope > .unit-row input');
+      const markPartial = () => {
+        picker.querySelectorAll('.unit-node').forEach((node) => {
+          const box = boxOf(node);
+          box.indeterminate = !box.checked && !!node.querySelector('.unit-node input:checked');
+        });
+      };
+      boxes.forEach((b) => b.addEventListener('change', () => {
+        const node = b.closest('.unit-node');
+        node.querySelectorAll('.unit-node input').forEach((child) => { child.checked = b.checked; });
+        if (!b.checked) {
+          for (let up = node.parentElement.closest('.unit-node'); up; up = up.parentElement.closest('.unit-node')) {
+            boxOf(up).checked = false;
+          }
+        }
+        markPartial();
+        updateCount();
+      }));
+      markPartial();
+      search.addEventListener('input', filter);
+      // Enter in the search box shouldn't submit the user form.
+      search.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+      updateCount();
+    });
+  }
+
   // 5. Custom dropdowns: a styled, searchable list on top of each native <select>.
   //    The native select stays in the form (hidden) and still submits / fires "change".
   const CHEVRON = '<svg class="cs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
@@ -238,6 +323,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     enhanceSelects();
     railToggle();
+    railTooltips();
+    unitPickers();
     addPasswordToggles();
     autoDismissFlashes();
     rememberUsername();

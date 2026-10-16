@@ -180,6 +180,24 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
 .hint { font-size: .8rem; color: var(--text-2); margin-top: .25rem; }
 select[multiple] { min-height: 140px; }
 
+/* unit picker: checkbox tree used on the user forms */
+.unit-picker { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.unit-picker-head { display: flex; align-items: center; gap: .75rem; padding: .55rem .6rem; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.unit-picker-head input { flex: 1; min-width: 0; padding: .45rem .65rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .88rem; background: var(--surface); color: var(--text); }
+.unit-count { font-size: .8rem; color: var(--text-2); white-space: nowrap; }
+.unit-tree { max-height: 340px; overflow-y: auto; padding: .35rem .4rem; }
+.unit-tree ul { list-style: none; margin: 0; padding: 0; }
+.unit-tree ul ul { margin-left: 1.1rem; padding-left: .55rem; border-left: 1px dashed var(--border); }
+.unit-row { display: flex; align-items: baseline; gap: .5rem; margin: 0; padding: .32rem .5rem; border-radius: 6px; font-weight: 400; cursor: pointer; }
+.unit-row:hover { background: var(--surface-2); }
+.unit-row:has(input:checked) { background: var(--brand-soft); }
+.unit-row:has(input:indeterminate) { background: var(--surface-2); }
+.unit-row input { flex: none; width: auto; margin: 0; accent-color: var(--brand); align-self: center; }
+.unit-code { font-weight: 600; white-space: nowrap; }
+.unit-name { color: var(--text-2); font-size: .9rem; }
+.t-college > .unit-row .unit-code { font-weight: 700; }
+.unit-group { margin: .7rem .5rem .25rem; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
   padding: .55rem 1rem; border-radius: 8px; border: 1px solid transparent; font: inherit; font-weight: 600;
@@ -272,6 +290,7 @@ details.table-view summary { cursor: pointer; font-size: .82rem; color: var(--te
 .course-list { display: grid; gap: .5rem; }
 .course-option { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem .9rem; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500; margin: 0; }
 .course-option input { width: auto; margin-right: .6rem; }
+.option-group { font-size: .8rem; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .03em; margin: .75rem 0 .4rem; }
 .course-option.done { opacity: .6; cursor: default; }
 .course-option:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); }
 
@@ -515,7 +534,14 @@ html:not(.rail-open) .rail-logo { gap: 0; }
 .rail-brand { font-weight: 800; font-size: 1.05rem; line-height: 1.15; }
 .rail-brand small { display: block; font-size: .68rem; font-weight: 600; color: var(--gold); }
 
-.rail-nav { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+/* The links scroll inside the rail when the window is too short, so the rail never grows
+   taller than the screen (which made it scroll away and leave a white strip below). */
+.rail-nav {
+  display: flex; flex-direction: column; gap: 6px; margin: 14px -6px 0; padding: 4px 6px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .35) transparent;
+}
+.rail-nav > * { flex: none; }
 .rail-foot { margin-top: auto; display: flex; flex-direction: column; }
 .rail a:not(.rail-logo) {
   position: relative; display: flex; align-items: center; gap: .75rem; width: 100%; height: 44px;
@@ -531,13 +557,25 @@ html:not(.rail-open) .rail a:not(.rail-logo) { gap: 0; }
 .rail-sep .rail-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sidebar-muted); }
 html.rail-open .rail-sep { height: auto; margin: 14px 12px 4px; background: none; }
 
-/* tooltips: only while collapsed */
-.rail a[data-tip]:hover::after, .rail a[data-tip]:focus-visible::after, .rail-toggle[data-tip]:hover::after {
-  content: attr(data-tip); position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+/* tooltips: link tips are one fixed element placed by app.js (only while collapsed),
+   so the scrolling link list can't clip them; the toggle keeps a plain CSS tip */
+.rail-toggle[data-tip]:hover::after, .rail-tip {
   background: var(--text); color: #fff; padding: .3rem .65rem; border-radius: 6px;
   font-size: .78rem; font-weight: 500; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow); z-index: 40;
 }
-html.rail-open .rail a[data-tip]:hover::after, html.rail-open .rail a[data-tip]:focus-visible::after { display: none; }
+.rail-toggle[data-tip]:hover::after {
+  content: attr(data-tip); position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+}
+.rail-tip { position: fixed; transform: translateY(-50%); }
+
+/* short screens: tighten the rail so the admin menu fits without scrolling */
+@media (max-height: 760px) and (min-width: 861px) {
+  .rail { gap: .25rem; padding-top: 10px; padding-bottom: 10px; }
+  .rail-logo { height: 42px; } .rail-logo img { width: 40px; height: 40px; }
+  .rail-nav { gap: 2px; margin-top: 8px; }
+  .rail a:not(.rail-logo) { height: 38px; }
+  .rail-sep { margin: 4px 6px; } html.rail-open .rail-sep { margin: 8px 12px 2px; }
+}
 
 /* small round handle on the middle of the rail edge */
 .rail-toggle {
@@ -566,11 +604,11 @@ html.rail-open .rail-toggle .ico { transform: rotate(180deg); }
   }
   .rail-logo { height: 38px; } .rail-logo img { width: 38px; height: 38px; }
   .rail-nav, .rail-foot { flex-direction: row; margin: 0; }
-  .rail-nav { margin-left: .4rem; } .rail-foot { margin-left: auto; }
+  .rail-nav { margin-left: .4rem; padding: 0; flex: none; overflow: visible; } .rail-foot { margin-left: auto; }
   .rail a:not(.rail-logo) { width: 44px; justify-content: center; padding: 0; gap: 0; }
   .rail-label, .rail-brand, html.rail-open .rail-label, html.rail-open .rail-brand { display: none; }
   .rail-sep, html.rail-open .rail-sep { width: 1px; height: 26px; margin: 0 4px; background: rgba(255, 255, 255, .28); }
-  .rail-toggle, .rail a[data-tip]:hover::after { display: none; }
+  .rail-toggle, .rail-tip { display: none; }
 }
 
 /* ---------- custom dropdowns (enhance native <select>) ---------- */

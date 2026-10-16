@@ -59,6 +59,35 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {%- endmacro %}
 
+{% macro unit_node(u, selected) -%}
+  <li class="unit-node t-{{ u.unit_type }}">
+    <label class="unit-row">
+      <input type="checkbox" name="unit_ids" value="{{ u.id }}" {{ 'checked' if u.id in selected }}>
+      <span class="unit-code">{{ u.code }}</span>
+      <span class="unit-name">{{ u.name }}</span>
+    </label>
+    {% if u.children %}<ul>{% for c in u.children %}{{ unit_node(c, selected) }}{% endfor %}</ul>{% endif %}
+  </li>
+{%- endmacro %}
+
+{# Checkbox tree for linking a user to units: college > department > course, then offices. #}
+{% macro unit_picker(roots, offices, selected=[]) -%}
+  <div class="unit-picker" data-unit-picker>
+    <div class="unit-picker-head">
+      <input type="search" placeholder="Find a course, department or office" aria-label="Find a unit" data-unit-search>
+      <span class="unit-count" data-unit-count></span>
+    </div>
+    <div class="unit-tree">
+      <ul>{% for root in roots %}{{ unit_node(root, selected) }}{% endfor %}</ul>
+      {% if offices %}
+        <div class="unit-group">Offices</div>
+        <ul>{% for o in offices %}{{ unit_node(o, selected) }}{% endfor %}</ul>
+      {% endif %}
+      <p class="unit-empty muted small" hidden>Nothing matches that search.</p>
+    </div>
+  </div>
+{%- endmacro %}
+
 {% macro unit_filter(unit_choices, unit_id, can_overall) -%}
   <div class="field">
     <label for="unit">Unit</label>

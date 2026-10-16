@@ -9,14 +9,6 @@
       "cwd": "${workspaceFolder}",
       "envFile": "${workspaceFolder}/.env",
       "jinja": true
-    },
-    {
-      "name": "PSU Pulse: evaluate analyzer",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/evaluate_model.py",
-      "args": ["database/sample_labeled_feedback.csv", "--errors"],
-      "cwd": "${workspaceFolder}"
     }
   ]
 }

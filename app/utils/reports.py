@@ -61,7 +61,7 @@ def build_summary(window):
     units = {u.id: u for u in Unit.query.all()}
     overall = next((_agg_dict(a, min_n) for a in aggs if a.unit_id is None), None)
 
-    type_order = {"college": 0, "department": 1, "course": 2}
+    type_order = {"college": 0, "department": 1, "course": 2, "office": 3}
     unit_rows = []
     for a in aggs:
         if a.unit_id is None:
